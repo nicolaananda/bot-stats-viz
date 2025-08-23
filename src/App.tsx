@@ -3,10 +3,24 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
+import { DashboardHeader } from "@/components/layout/dashboard-header";
+import DashboardOverview from "./pages/dashboard-overview";
+import Charts from "./pages/charts";
+import UsersPage from "./pages/users";
+import TransactionsPage from "./pages/transactions";
+import ProductsPage from "./pages/products";
+import AnalyticsPage from "./pages/analytics";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes (formerly cacheTime)
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -14,11 +28,24 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <SidebarProvider>
+          <div className="min-h-screen flex w-full bg-background">
+            <DashboardSidebar />
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <DashboardHeader />
+              <main className="flex-1 overflow-x-hidden overflow-y-auto">
+                <Routes>
+                  <Route path="/" element={<DashboardOverview />} />
+                  <Route path="/charts" element={<Charts />} />
+                  <Route path="/users" element={<UsersPage />} />
+                  <Route path="/products" element={<ProductsPage />} />
+                  <Route path="/transactions" element={<TransactionsPage />} />
+                  <Route path="/analytics" element={<AnalyticsPage />} />
+                </Routes>
+              </main>
+            </div>
+          </div>
+        </SidebarProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
