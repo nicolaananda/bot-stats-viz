@@ -9,7 +9,7 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Ultra Calm & Eye-Friendly Color Scheme */
-    --background: 250 252 254;
+    --background: 241 245 249;
     --foreground: 71 82 94;
 
     --card: 255 255 255;
@@ -54,7 +54,7 @@ All colors MUST be HSL.
     --radius: 0.75rem;
 
     /* Sidebar Colors - Ultra Calm */
-    --sidebar-background: 250 252 254;
+    --sidebar-background: 241 245 249;
     --sidebar-foreground: 99 115 129;
     --sidebar-primary: 99 115 129;
     --sidebar-primary-foreground: 255 255 255;
