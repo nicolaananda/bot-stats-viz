@@ -1,12 +1,25 @@
 import { useQuery } from '@tanstack/react-query';
 import { TrendingUp, Users, CreditCard, DollarSign, Activity } from 'lucide-react';
 import { StatsCard } from '@/components/ui/stats-card';
-import { OverviewChart } from '@/components/charts/overview-chart';
 import { EnvironmentBanner } from '@/components/ui/environment-banner';
 import { dashboardApi } from '@/services/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, formatTime, getTransactionUserName, getTransactionPaymentMethod, getTransactionReferenceId } from '@/lib/utils';
+import { lazy, Suspense } from 'react';
+
+// Lazy load chart component
+const OverviewChart = lazy(() => import('@/components/charts/overview-chart'));
+
+// Chart loading fallback
+const ChartLoading = () => (
+  <div className="flex items-center justify-center h-[350px]">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+      <p className="text-muted-foreground">Loading chart...</p>
+    </div>
+  </div>
+);
 
 export default function DashboardOverview() {
   const { data: overview, isLoading, error } = useQuery({
@@ -57,7 +70,7 @@ export default function DashboardOverview() {
 
   return (
     <div className="flex-1 space-y-8 p-8">
-      <EnvironmentBanner />
+      {/* <EnvironmentBanner /> */}
       
       <div className="flex items-center justify-between">
         <div>
@@ -109,11 +122,13 @@ export default function DashboardOverview() {
       {/* Charts and Recent Activity */}
       <div className="grid gap-8 md:grid-cols-7">
         <div className="col-span-4">
-          <OverviewChart 
-            data={chartData}
-            title="Revenue Trends"
-            description="Daily revenue, transactions, and profit overview"
-          />
+          <Suspense fallback={<ChartLoading />}>
+            <OverviewChart 
+              data={chartData}
+              title="Revenue Trends"
+              description="Daily revenue, transactions, and profit overview"
+            />
+          </Suspense>
         </div>
         
         <div className="col-span-3">
@@ -131,21 +146,21 @@ export default function DashboardOverview() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-4 rounded-xl bg-white/60 dark:bg-slate-800/60 border border-white/20 dark:border-slate-700/20">
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-[hsl(var(--chart-1))] rounded-full"></div>
                     <span className="font-medium text-foreground">QRIS</span>
                   </div>
                   <Badge variant="secondary" className="font-semibold px-3 py-1">{overview?.metodeBayar?.qris || 0}</Badge>
                 </div>
                 <div className="flex items-center justify-between p-4 rounded-xl bg-white/60 dark:bg-slate-800/60 border border-white/20 dark:border-slate-700/20">
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-[hsl(var(--chart-1))] rounded-full"></div>
                     <span className="font-medium text-foreground">Saldo</span>
                   </div>
                   <Badge variant="secondary" className="font-semibold px-3 py-1">{overview?.metodeBayar?.saldo || 0}</Badge>
                 </div>
                 <div className="flex items-center justify-between p-4 rounded-xl bg-white/60 dark:bg-slate-800/60 border border-white/20 dark:border-slate-700/20">
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-slate-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-[hsl(var(--muted-foreground))] rounded-full"></div>
                     <span className="font-medium text-foreground">Lainnya</span>
                   </div>
                   <Badge variant="secondary" className="font-semibold px-3 py-1">{overview?.metodeBayar?.unknown || 0}</Badge>
@@ -165,7 +180,7 @@ export default function DashboardOverview() {
         <CardContent>
           <div className="space-y-3">
             {recentTransactions?.transactions.map((transaction) => (
-              <div key={transaction.reffId} className="group flex items-center justify-between p-4 rounded-xl bg-white/60 dark:bg-slate-800/60 border border-white/20 dark:border-slate-700/20 hover:bg-white/80 dark:hover:bg-slate-800/80 hover:shadow-elevated transition-all duration-300">
+              <div key={getTransactionReferenceId(transaction)} className="group flex items-center justify-between p-4 rounded-xl bg-white/60 dark:bg-slate-800/60 border border-white/20 dark:border-slate-700/20 hover:bg-white/80 dark:hover:bg-slate-800/80 hover:shadow-elevated transition-all duration-300">
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-primary/10 rounded-lg">
@@ -174,14 +189,14 @@ export default function DashboardOverview() {
                     <div>
                       <p className="font-semibold text-foreground">{transaction.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {transaction.user} • {transaction.metodeBayar}
+                        {getTransactionUserName(transaction)} • {getTransactionPaymentMethod(transaction)}
                       </p>
                     </div>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-lg text-foreground">{formatCurrency(transaction.totalBayar)}</p>
-                  <p className="text-xs text-muted-foreground">{formatDate(transaction.date, 'short')}</p>
+                  <p className="text-xs text-muted-foreground">{formatDate(transaction.date, 'short')} • {formatTime(transaction.date)}</p>
                 </div>
               </div>
             ))}

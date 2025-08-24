@@ -8,7 +8,7 @@ import { StatsCard } from '@/components/ui/stats-card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { dashboardApi } from '@/services/api';
 
-const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
+const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))'];
 
 export default function ProductsPage() {
   const { data: productStats, isLoading } = useQuery({
@@ -125,7 +125,7 @@ export default function ProductsPage() {
                   />
                   <Bar 
                     dataKey="sold" 
-                    fill="hsl(var(--primary))"
+                    fill="hsl(var(--chart-2))"
                     radius={[0, 4, 4, 0]}
                   />
                 </BarChart>
@@ -218,66 +218,17 @@ export default function ProductsPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant={getPerformanceBadge(product.totalSold, productStats.totalSold)}>
-                        {marketShare >= 20 ? 'High' : marketShare >= 10 ? 'Medium' : 'Low'}
+                        {getPerformanceBadge(product.totalSold, productStats.totalSold) === 'default' ? 'High' : getPerformanceBadge(product.totalSold, productStats.totalSold) === 'secondary' ? 'Medium' : 'Low'}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Progress value={marketShare} className="w-20" />
-                        <span className="text-xs text-muted-foreground">
-                          {marketShare.toFixed(1)}%
-                        </span>
-                      </div>
+                      <Progress value={marketShare} className="w-[120px]" />
                     </TableCell>
                   </TableRow>
                 );
               })}
             </TableBody>
           </Table>
-          
-          {(!productStats?.products || productStats.products.length === 0) && (
-            <div className="text-center py-12">
-              <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-lg font-medium">No products found</p>
-              <p className="text-muted-foreground">Products will appear here once available</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Top Products Spotlight */}
-      <Card className="shadow-card border-0 bg-card/50 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle>Top Performers</CardTitle>
-          <CardDescription>Your best-selling products spotlight</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {productStats?.topProducts.slice(0, 6).map((product, index) => (
-              <div key={product.id} className="p-4 rounded-lg border border-border/50 hover:bg-accent/30 transition-colors">
-                <div className="flex items-center justify-between mb-2">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    index === 0 ? 'bg-gradient-primary text-white' : 
-                    index === 1 ? 'bg-gradient-secondary text-primary' : 
-                    'bg-accent text-accent-foreground'
-                  }`}>
-                    #{index + 1}
-                  </div>
-                  <Badge variant="outline" className="text-xs">
-                    {product.totalSold} sold
-                  </Badge>
-                </div>
-                <h4 className="font-medium mb-1">{product.name}</h4>
-                <p className="text-sm text-muted-foreground mb-2">
-                  {formatCurrency(product.totalRevenue)} revenue
-                </p>
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{formatCurrency(product.averagePrice)} avg</span>
-                  <span>{product.transactionCount} transactions</span>
-                </div>
-              </div>
-            ))}
-          </div>
         </CardContent>
       </Card>
     </div>

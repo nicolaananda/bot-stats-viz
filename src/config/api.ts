@@ -12,6 +12,7 @@ export const API_ENDPOINTS = {
   },
   users: {
     activity: '/api/dashboard/users/activity',
+    all: '/api/dashboard/users/all',
     stats: '/api/dashboard/users/stats',
     transactions: (userId: string) => `/api/dashboard/users/${userId}/transactions`,
   },

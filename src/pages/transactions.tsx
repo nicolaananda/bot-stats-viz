@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { StatsCard } from '@/components/ui/stats-card';
 import { dashboardApi } from '@/services/api';
+import { formatCurrency, getTransactionUserName, getTransactionPaymentMethod, getPaymentMethodBadge, getTransactionReferenceId } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
 export default function TransactionsPage() {
@@ -34,14 +35,6 @@ export default function TransactionsPage() {
     queryKey: ['dashboard-overview'],
     queryFn: dashboardApi.getOverview,
   });
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).format(value);
-  };
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) {
@@ -86,16 +79,6 @@ export default function TransactionsPage() {
         variant: "destructive",
       });
     }
-  };
-
-  const getPaymentMethodBadge = (method: string) => {
-    const colors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
-      'DANA': 'default',
-      'OVO': 'secondary',
-      'GOPAY': 'outline',
-      'QRIS': 'destructive',
-    };
-    return colors[method] || 'secondary';
   };
 
   if (isLoading) {
@@ -219,7 +202,7 @@ export default function TransactionsPage() {
                 </div>
                 <div>
                   <p className="text-sm text-slate-500">User</p>
-                  <p className="font-medium text-slate-700">{searchResults.user}</p>
+                  <p className="font-medium text-slate-700">{getTransactionUserName(searchResults)}</p>
                 </div>
                 <div>
                   <p className="text-sm text-slate-500">Product</p>
@@ -232,7 +215,7 @@ export default function TransactionsPage() {
                 <div>
                   <p className="text-sm text-slate-500">Payment Method</p>
                   <Badge variant={getPaymentMethodBadge(searchResults.metodeBayar)}>
-                    {searchResults.metodeBayar}
+                    {getTransactionPaymentMethod(searchResults)}
                   </Badge>
                 </div>
                 <div>
@@ -278,10 +261,10 @@ export default function TransactionsPage() {
             </TableHeader>
             <TableBody>
               {recentTransactions?.transactions.map((transaction) => (
-                <TableRow key={transaction.reffId} className="hover:bg-slate-50 border-slate-100">
+                <TableRow key={getTransactionReferenceId(transaction)} className="hover:bg-slate-50 border-slate-100">
                   <TableCell>
                     <code className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-700 border border-slate-200">
-                      {transaction.reffId}
+                      {getTransactionReferenceId(transaction)}
                     </code>
                   </TableCell>
                   <TableCell>
@@ -293,11 +276,11 @@ export default function TransactionsPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <p className="font-medium text-slate-700">{transaction.user}</p>
+                    <p className="font-medium text-slate-700">{getTransactionUserName(transaction)}</p>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={getPaymentMethodBadge(transaction.metodeBayar)}>
-                      {transaction.metodeBayar}
+                    <Badge variant={getPaymentMethodBadge(getTransactionPaymentMethod(transaction))}>
+                      {getTransactionPaymentMethod(transaction)}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -311,7 +294,7 @@ export default function TransactionsPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        setSearchTerm(transaction.reffId);
+                        setSearchTerm(getTransactionReferenceId(transaction));
                         handleSearch();
                       }}
                       className="text-slate-500 hover:text-slate-700 hover:bg-slate-100"

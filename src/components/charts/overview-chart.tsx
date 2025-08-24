@@ -1,6 +1,28 @@
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { lazy, Suspense } from 'react';
+
+// Dynamic imports for chart components
+const LineChart = lazy(() => import('recharts').then(module => ({ default: module.LineChart })));
+const Line = lazy(() => import('recharts').then(module => ({ default: module.Line })));
+const XAxis = lazy(() => import('recharts').then(module => ({ default: module.XAxis })));
+const YAxis = lazy(() => import('recharts').then(module => ({ default: module.YAxis })));
+const CartesianGrid = lazy(() => import('recharts').then(module => ({ default: module.CartesianGrid })));
+const Tooltip = lazy(() => import('recharts').then(module => ({ default: module.Tooltip })));
+const ResponsiveContainer = lazy(() => import('recharts').then(module => ({ default: module.ResponsiveContainer })));
+const BarChart = lazy(() => import('recharts').then(module => ({ default: module.BarChart })));
+const Bar = lazy(() => import('recharts').then(module => ({ default: module.Bar })));
+
+// Chart loading fallback
+const ChartComponentLoading = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={
+    <div className="flex items-center justify-center h-full">
+      <div className="animate-pulse bg-muted rounded h-full w-full"></div>
+    </div>
+  }>
+    {children}
+  </Suspense>
+);
 
 interface ChartDataPoint {
   date: string;
@@ -15,7 +37,7 @@ interface OverviewChartProps {
   description?: string;
 }
 
-export function OverviewChart({ data, title = "Revenue Overview", description = "Your revenue and transaction trends" }: OverviewChartProps) {
+function OverviewChart({ data, title = "Revenue Overview", description = "Your revenue and transaction trends" }: OverviewChartProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
@@ -42,103 +64,109 @@ export function OverviewChart({ data, title = "Revenue Overview", description = 
           
           <TabsContent value="revenue" className="space-y-4">
             <div className="h-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={data}>
-                  <CartesianGrid strokeDasharray="3 3" className="opacity-20" stroke="hsl(var(--border))" />
-                  <XAxis 
-                    dataKey="date" 
-                    className="text-xs text-muted-foreground"
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis 
-                    className="text-xs text-muted-foreground"
-                    tickFormatter={formatCurrency}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip 
-                    formatter={(value: number) => [formatCurrency(value), 'Revenue']}
-                    labelFormatter={(label) => `Date: ${label}`}
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '12px',
-                      boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1)',
-                    }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="revenue" 
-                    stroke="hsl(var(--primary))" 
-                    strokeWidth={3}
-                    dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 5 }}
-                    activeDot={{ r: 8, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <ChartComponentLoading>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={data}>
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-20" stroke="hsl(var(--border))" />
+                    <XAxis 
+                      dataKey="date" 
+                      className="text-xs text-muted-foreground"
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis 
+                      className="text-xs text-muted-foreground"
+                      tickFormatter={formatCurrency}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip 
+                      formatter={(value: number) => [formatCurrency(value), 'Revenue']}
+                      labelFormatter={(label) => `Date: ${label}`}
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '12px',
+                        boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1)',
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="revenue" 
+                      stroke="hsl(var(--chart-1))" 
+                      strokeWidth={3}
+                      dot={{ fill: 'hsl(var(--chart-1))', strokeWidth: 2, r: 5 }}
+                      activeDot={{ r: 8, stroke: 'hsl(var(--chart-1))', strokeWidth: 2 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartComponentLoading>
             </div>
           </TabsContent>
           
           <TabsContent value="transactions" className="space-y-4">
             <div className="h-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data}>
-                  <CartesianGrid strokeDasharray="3 3" className="opacity-20" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="date" className="text-xs text-muted-foreground" axisLine={false} tickLine={false} />
-                  <YAxis className="text-xs text-muted-foreground" axisLine={false} tickLine={false} />
-                  <Tooltip 
-                    formatter={(value: number) => [value.toLocaleString(), 'Transactions']}
-                    labelFormatter={(label) => `Date: ${label}`}
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '12px',
-                      boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1)',
-                    }}
-                  />
-                  <Bar 
-                    dataKey="transactions" 
-                    fill="hsl(var(--primary))"
-                    radius={[6, 6, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              <ChartComponentLoading>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={data}>
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-20" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" className="text-xs text-muted-foreground" axisLine={false} tickLine={false} />
+                    <YAxis className="text-xs text-muted-foreground" axisLine={false} tickLine={false} />
+                    <Tooltip 
+                      formatter={(value: number) => [value.toLocaleString(), 'Transactions']}
+                      labelFormatter={(label) => `Date: ${label}`}
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '12px',
+                        boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1)',
+                      }}
+                    />
+                    <Bar 
+                      dataKey="transactions" 
+                      fill="hsl(var(--chart-2))"
+                      radius={[6, 6, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartComponentLoading>
             </div>
           </TabsContent>
           
           <TabsContent value="profit" className="space-y-4">
             <div className="h-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={data}>
-                  <CartesianGrid strokeDasharray="3 3" className="opacity-20" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="date" className="text-xs text-muted-foreground" axisLine={false} tickLine={false} />
-                  <YAxis 
-                    className="text-xs text-muted-foreground"
-                    tickFormatter={formatCurrency}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip 
-                    formatter={(value: number) => [formatCurrency(value), 'Profit']}
-                    labelFormatter={(label) => `Date: ${label}`}
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '12px',
-                      boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1)',
-                    }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="profit" 
-                    stroke="hsl(139 92% 46%)" 
-                    strokeWidth={3}
-                    dot={{ fill: 'hsl(139 92% 46%)', strokeWidth: 2, r: 5 }}
-                    activeDot={{ r: 8, stroke: 'hsl(139 92% 46%)', strokeWidth: 2 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <ChartComponentLoading>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={data}>
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-20" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" className="text-xs text-muted-foreground" axisLine={false} tickLine={false} />
+                    <YAxis 
+                      className="text-xs text-muted-foreground"
+                      tickFormatter={formatCurrency}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip 
+                      formatter={(value: number) => [formatCurrency(value), 'Profit']}
+                      labelFormatter={(label) => `Date: ${label}`}
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '12px',
+                        boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1)',
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="profit" 
+                      stroke="hsl(var(--chart-3))" 
+                      strokeWidth={3}
+                      dot={{ fill: 'hsl(var(--chart-3))', strokeWidth: 2, r: 5 }}
+                      activeDot={{ r: 8, stroke: 'hsl(var(--chart-3))', strokeWidth: 2 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartComponentLoading>
             </div>
           </TabsContent>
         </Tabs>
@@ -146,3 +174,5 @@ export function OverviewChart({ data, title = "Revenue Overview", description = 
     </Card>
   );
 }
+
+export default OverviewChart;
