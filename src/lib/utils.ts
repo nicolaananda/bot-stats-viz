@@ -5,68 +5,100 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Currency formatting for Indonesian Rupiah
-export function formatCurrency(value: number, currency: string = 'IDR'): string {
-  if (currency === 'IDR') {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  }
-  
-  return new Intl.NumberFormat('en-US', {
+export function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('id-ID', {
     style: 'currency',
-    currency,
-    minimumFractionDigits: 2,
+    currency: 'IDR',
+    minimumFractionDigits: 0,
   }).format(value);
 }
 
-// Number formatting with Indonesian locale
-export function formatNumber(value: number): string {
-  return new Intl.NumberFormat('id-ID').format(value);
-}
-
-// Percentage formatting
-export function formatPercentage(value: number, decimals: number = 1): string {
-  return `${value.toFixed(decimals)}%`;
-}
-
-// Date formatting
-export function formatDate(dateString: string, format: 'short' | 'long' | 'relative' = 'short'): string {
+export function formatDate(dateString: string, format: 'short' | 'long' = 'short'): string {
   const date = new Date(dateString);
   
-  if (format === 'relative') {
-    const now = new Date();
-    const diffInMs = now.getTime() - date.getTime();
-    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-    
-    if (diffInDays === 0) {
-      return 'Today';
-    } else if (diffInDays === 1) {
-      return 'Yesterday';
-    } else if (diffInDays < 7) {
-      return `${diffInDays} days ago`;
-    } else if (diffInDays < 30) {
-      const weeks = Math.floor(diffInDays / 7);
-      return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
-    } else {
-      return date.toLocaleDateString('id-ID');
-    }
-  }
-  
-  if (format === 'long') {
+  if (format === 'short') {
     return date.toLocaleDateString('id-ID', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
     });
   }
   
-  return date.toLocaleDateString('id-ID');
+  return date.toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+export function formatTime(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleTimeString('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+}
+
+// Helper functions to prevent "unknown" values
+export function formatPaymentMethod(method: string): string {
+  if (!method || method === 'unknown' || method === 'undefined' || method === 'null' || method === '') {
+    return 'Not specified';
+  }
+  return method;
+}
+
+export function formatUserName(user: string): string {
+  if (!user || user === 'unknown' || user === 'undefined' || user === 'null' || user === '') {
+    return 'Anonymous User';
+  }
+  return user;
+}
+
+// Enhanced functions that handle both old and new field names
+export function getTransactionUserName(transaction: any): string {
+  // Try new field first, then fallback to old field
+  const userName = transaction.user_name || transaction.user;
+  return formatUserName(userName);
+}
+
+export function getTransactionPaymentMethod(transaction: any): string {
+  // Try new field first, then fallback to old field
+  const paymentMethod = transaction.payment_method || transaction.metodeBayar;
+  return formatPaymentMethod(paymentMethod);
+}
+
+export function getTransactionReferenceId(transaction: any): string {
+  // Try new field first (order_id), then fallback to old field (reffId)
+  const referenceId = transaction.order_id || transaction.reffId;
+  if (!referenceId || referenceId === 'unknown' || referenceId === 'undefined' || referenceId === 'null' || referenceId === '') {
+    return 'N/A';
+  }
+  return referenceId;
+}
+
+export function getPaymentMethodBadge(method: string): 'default' | 'secondary' | 'destructive' | 'outline' {
+  if (!method || method === 'unknown' || method === 'undefined' || method === 'null' || method === '') {
+    return 'outline';
+  }
+  
+  const colors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
+    'DANA': 'default',
+    'OVO': 'secondary',
+    'GOPAY': 'outline',
+    'QRIS': 'destructive',
+    'SALDO': 'default',
+    'CASH': 'secondary',
+    'BANK_TRANSFER': 'outline',
+    'CREDIT_CARD': 'destructive',
+    'DEBIT_CARD': 'outline',
+    'E_WALLET': 'secondary',
+    'BANK': 'outline',
+    'TRANSFER': 'outline',
+  };
+  return colors[method] || 'secondary';
 }
 
 // Validate API response

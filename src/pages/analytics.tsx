@@ -5,6 +5,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StatsCard } from '@/components/ui/stats-card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { dashboardApi } from '@/services/api';
+import { useAIInsightsWithFallback } from '@/hooks/useAIInsights';
+import { AIInsightsCard } from '@/components/ui/ai-insights-card';
+import { AIStatus } from '@/components/ui/ai-status';
+import { DebugPanel } from '@/components/ui/debug-panel';
+import { UserActivityDebug } from '@/components/ui/user-activity-debug';
+import { DataComparison } from '@/components/ui/data-comparison';
+import { UserIdDebug } from '@/components/ui/user-id-debug';
 
 export default function AnalyticsPage() {
   const { data: overview, isLoading: overviewLoading, error: overviewError } = useQuery({
@@ -16,7 +23,7 @@ export default function AnalyticsPage() {
 
   const { data: userActivity, isLoading: userActivityLoading, error: userActivityError } = useQuery({
     queryKey: ['user-activity'],
-    queryFn: dashboardApi.getUserActivity,
+    queryFn: dashboardApi.getEnhancedUserActivity,
     retry: 1,
     retryDelay: 1000,
   });
@@ -27,6 +34,45 @@ export default function AnalyticsPage() {
     retry: 1,
     retryDelay: 1000,
   });
+
+  // Get recent transactions for data comparison
+  const { data: recentTransactions, isLoading: recentTransactionsLoading } = useQuery({
+    queryKey: ['recent-transactions'],
+    queryFn: () => dashboardApi.getRecentTransactions(100),
+    retry: 1,
+    retryDelay: 1000,
+  });
+
+  // Get all users for ID format comparison
+  const { data: allUsersData, isLoading: allUsersLoading } = useQuery({
+    queryKey: ['all-users-debug'],
+    queryFn: () => dashboardApi.getAllUsers(1, 100),
+    retry: 1,
+    retryDelay: 1000,
+  });
+
+  // AI Insights
+  const { insights, isLoading: aiLoading, hasAIInsights, lastUpdated, cacheStatus } = useAIInsightsWithFallback({
+    transaksiHariIni: overview?.transaksiHariIni || 0,
+    pendapatanHariIni: overview?.pendapatanHariIni || 0,
+    totalTransaksi: overview?.totalTransaksi || 0,
+    totalPendapatan: overview?.totalPendapatan || 0,
+    userActivity: userActivity?.activityTrends?.dailyActive,
+    dailyRevenue: overview?.chartData?.daily,
+  });
+
+  // Ensure insights is always an object, not a Promise
+  const safeInsights = insights || {
+    insights: [],
+    summary: 'Loading insights...',
+    nextActions: []
+  };
+
+  // Manual refresh function for AI insights
+  const handleRefreshInsights = () => {
+    // This will trigger a refetch of the AI insights
+    window.location.reload(); // Simple approach - in production you might want to use queryClient.invalidateQueries
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -48,10 +94,10 @@ export default function AnalyticsPage() {
   })) : [];
 
   const conversionData = overview ? [
-    { name: 'Total Transaksi', value: overview.totalTransaksi || 0, fill: 'hsl(var(--primary))' },
-    { name: 'Transaksi Hari Ini', value: overview.transaksiHariIni || 0, fill: 'hsl(var(--success))' },
-    { name: 'Total Pendapatan', value: Math.floor((overview.totalPendapatan || 0) / 1000), fill: 'hsl(168 85% 47%)' },
-    { name: 'Pendapatan Hari Ini', value: Math.floor((overview.pendapatanHariIni || 0) / 1000), fill: 'hsl(var(--muted))' },
+    { name: 'Total Transaksi', value: overview.totalTransaksi || 0, fill: 'hsl(var(--chart-2))' },
+    { name: 'Transaksi Hari Ini', value: overview.transaksiHariIni || 0, fill: 'hsl(var(--chart-4))' },
+    { name: 'Total Pendapatan', value: Math.floor((overview.totalPendapatan || 0) / 1000), fill: 'hsl(var(--chart-1))' },
+    { name: 'Pendapatan Hari Ini', value: Math.floor((overview.pendapatanHariIni || 0) / 1000), fill: 'hsl(var(--chart-3))' },
   ] : [];
 
   const isLoading = overviewLoading || userActivityLoading || userStatsLoading;
@@ -92,6 +138,18 @@ export default function AnalyticsPage() {
             Deep insights into your WhatsApp bot performance and user behavior
           </p>
         </div>
+      </div>
+
+      {/* AI Status */}
+      <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
+        <AIStatus 
+          hasAPIKey={!!import.meta.env.VITE_OPENAI_API_KEY}
+          isConnected={hasAIInsights}
+          isLoading={aiLoading}
+          onConfigure={() => {
+            alert('Please add VITE_OPENAI_API_KEY to your .env file');
+          }}
+        />
       </div>
 
       {/* Key Metrics */}
@@ -149,8 +207,8 @@ export default function AnalyticsPage() {
                     <AreaChart data={dailyTrendData}>
                       <defs>
                         <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
@@ -167,7 +225,7 @@ export default function AnalyticsPage() {
                       <Area 
                         type="monotone" 
                         dataKey="revenue" 
-                        stroke="hsl(var(--primary))"
+                        stroke="hsl(var(--chart-1))"
                         strokeWidth={2}
                         fillOpacity={1}
                         fill="url(#revenueGradient)"
@@ -201,9 +259,9 @@ export default function AnalyticsPage() {
                       <Line 
                         type="monotone" 
                         dataKey="active" 
-                        stroke="hsl(var(--success))" 
+                        stroke="hsl(var(--chart-2))" 
                         strokeWidth={3}
-                        dot={{ fill: 'hsl(var(--success))', strokeWidth: 2, r: 4 }}
+                        dot={{ fill: 'hsl(var(--chart-2))', strokeWidth: 2, r: 4 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -279,50 +337,19 @@ export default function AnalyticsPage() {
 
         <TabsContent value="insights" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-1">
-            <Card className="shadow-card border-0 bg-card/50 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle>AI-Powered Insights</CardTitle>
-                <CardDescription>Automated insights from your data</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="p-4 bg-gradient-secondary rounded-lg border-l-4 border-primary">
-                    <h4 className="font-semibold text-primary mb-2">🚀 Growth Opportunity</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Transaksi hari ini: {overview?.transaksiHariIni || 0} dengan pendapatan {formatCurrency(overview?.pendapatanHariIni || 0)}. 
-                      Pertimbangkan untuk memperluas layanan untuk mempertahankan pertumbuhan ini.
-                    </p>
-                  </div>
-                  
-                  <div className="p-4 bg-gradient-secondary rounded-lg border-l-4 border-success">
-                    <h4 className="font-semibold text-success mb-2">✅ High Engagement</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Total transaksi: {overview?.totalTransaksi || 0} dengan total pendapatan {formatCurrency(overview?.totalPendapatan || 0)}. 
-                      Ini menunjukkan engagement yang kuat dari pengguna.
-                    </p>
-                  </div>
-
-                  <div className="p-4 bg-gradient-secondary rounded-lg border-l-4 border-purple-500">
-                    <h4 className="font-semibold text-purple-600 dark:text-purple-400 mb-2">⚡ Optimization Tip</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Peak transaction times appear to be during certain hours. 
-                      Consider automated messaging during these periods to maximize conversions.
-                    </p>
-                  </div>
-
-                  <div className="p-4 bg-gradient-secondary rounded-lg border-l-4 border-info">
-                    <h4 className="font-semibold text-info mb-2">📊 Data Quality</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Data collection Anda komprehensif dengan {overview?.totalTransaksi || 0} total transaksi tercatat. 
-                      Ini memberikan visibilitas yang sangat baik ke dalam pola perilaku pengguna.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <AIInsightsCard 
+              insights={safeInsights}
+              isLoading={aiLoading}
+              hasAIInsights={hasAIInsights}
+              lastUpdated={lastUpdated}
+              cacheStatus={cacheStatus}
+              onRefresh={handleRefreshInsights}
+            />
           </div>
         </TabsContent>
       </Tabs>
+
+    
     </div>
   );
 }

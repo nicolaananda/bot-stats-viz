@@ -63,6 +63,7 @@ export interface UserActivity {
     lastActivity: string;
     transactionCount: number;
     totalSpent: number;
+    saldo: number;
     role: string;
   }>;
   activityTrends: {
@@ -74,26 +75,43 @@ export interface UserActivity {
 
 export interface UserTransactions {
   user: string;
+  userId: string;
   totalTransaksi: number;
   totalSpent: number;
+  currentSaldo?: number;
   transaksi: Transaction[];
 }
 
 export interface Transaction {
-  id: string;
+  id?: string;
+  referenceId?: string;
+  reffId: string;
   name: string;
   price: number;
   date: string;
   jumlah: number;
-  user?: string;
-  metodeBayar: string;
+  user_name?: string;
+  user_id?: string;
+  payment_method?: string;
+  metodeBayar?: string; // Keep for backward compatibility
   totalBayar: number;
-  reffId: string;
+  order_id?: string;
+  status?: 'completed' | 'pending' | 'failed' | string;
+  // Additional fields for better transaction details
+  productDetails?: {
+    category?: string;
+    description?: string;
+  };
+  // Payment and shipping info
+  paymentStatus?: string;
+  shippingStatus?: string;
+  notes?: string;
 }
 
 export interface TransactionDetail {
   reffId: string;
   user: string;
+  user_name?: string;
   userRole: string;
   produk: string;
   idProduk: string;
@@ -101,6 +119,7 @@ export interface TransactionDetail {
   jumlah: number;
   totalBayar: number;
   metodeBayar: string;
+  payment_method?: string;
   tanggal: string;
   profit: number;
 }

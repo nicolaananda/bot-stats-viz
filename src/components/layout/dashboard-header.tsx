@@ -18,7 +18,7 @@ export function DashboardHeader() {
       <div className="flex h-16 items-center px-6 gap-4">
         <SidebarTrigger className="mr-2" />
         
-        {/* Search */}
+        {/* Search
         <div className="flex-1 max-w-md">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -27,17 +27,17 @@ export function DashboardHeader() {
               className="pl-10 bg-muted/50 border-0 focus-visible:ring-1"
             />
           </div>
-        </div>
+        </div> */}
 
         {/* Header Actions */}
-        <div className="flex items-center gap-2">
-          {/* Notifications */}
+        <div className="ml-auto flex items-center gap-2">
+          {/* Notifications
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-4 w-4" />
             <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full text-[10px] flex items-center justify-center text-white">
               3
             </span>
-          </Button>
+          </Button> */}
 
           {/* User Menu */}
           <DropdownMenu>
@@ -61,15 +61,15 @@ export function DashboardHeader() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem disabled>
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem disabled>
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
+              <DropdownMenuItem disabled className="text-destructive">
                 Log out
               </DropdownMenuItem>
             </DropdownMenuContent>

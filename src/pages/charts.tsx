@@ -5,7 +5,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { dashboardApi } from '@/services/api';
 import { TrendingUp, BarChart3, Calendar } from 'lucide-react';
 
-const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
+const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))'];
 
 export default function Charts() {
   const { data: overview, isLoading: overviewLoading } = useQuery({
@@ -114,9 +114,9 @@ export default function Charts() {
                       <Line 
                         type="monotone" 
                         dataKey="revenue" 
-                        stroke="hsl(var(--primary))" 
+                        stroke="hsl(var(--chart-1))" 
                         strokeWidth={3}
-                        dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
+                        dot={{ fill: 'hsl(var(--chart-1))', strokeWidth: 2, r: 4 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -146,7 +146,7 @@ export default function Charts() {
                       />
                       <Bar 
                         dataKey="transactions" 
-                        fill="hsl(var(--primary))"
+                        fill="hsl(var(--chart-2))"
                         radius={[4, 4, 0, 0]}
                       />
                     </BarChart>
@@ -179,9 +179,9 @@ export default function Charts() {
                     <Line 
                       type="monotone" 
                       dataKey="profit" 
-                      stroke="hsl(var(--success))" 
+                      stroke="hsl(var(--chart-3))" 
                       strokeWidth={3}
-                      dot={{ fill: 'hsl(var(--success))', strokeWidth: 2, r: 4 }}
+                      dot={{ fill: 'hsl(var(--chart-3))', strokeWidth: 2, r: 4 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -214,7 +214,7 @@ export default function Charts() {
                       />
                       <Bar 
                         dataKey="revenue" 
-                        fill="hsl(var(--primary))"
+                        fill="hsl(var(--chart-1))"
                         radius={[4, 4, 0, 0]}
                       />
                     </BarChart>
@@ -246,9 +246,9 @@ export default function Charts() {
                       <Line 
                         type="monotone" 
                         dataKey="userGrowth" 
-                        stroke="hsl(var(--info))" 
+                        stroke="hsl(var(--chart-4))" 
                         strokeWidth={3}
-                        dot={{ fill: 'hsl(var(--info))', strokeWidth: 2, r: 4 }}
+                        dot={{ fill: 'hsl(var(--chart-4))', strokeWidth: 2, r: 4 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -319,7 +319,7 @@ export default function Charts() {
                       />
                       <Bar 
                         dataKey="saldo" 
-                        fill="hsl(var(--primary))"
+                        fill="hsl(var(--chart-2))"
                         radius={[4, 4, 0, 0]}
                       />
                     </BarChart>
