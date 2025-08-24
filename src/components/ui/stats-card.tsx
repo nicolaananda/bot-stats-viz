@@ -22,30 +22,36 @@ export function StatsCard({
 }: StatsCardProps) {
   return (
     <Card className={cn(
-      "shadow-card hover:shadow-elevated transition-all duration-300 animate-fade-in border-0 bg-card/50 backdrop-blur-sm",
+      "group relative overflow-hidden transition-all duration-500 animate-fade-in border-0",
+      "hover:shadow-elevated hover:scale-[1.02]",
       className
     )}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/80 to-transparent dark:from-slate-800/80 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>
         {Icon && (
-          <Icon className="h-4 w-4 text-muted-foreground" />
+          <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors duration-300">
+            <Icon className="h-4 w-4 text-primary" />
+          </div>
         )}
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+      <CardContent className="relative z-10">
+        <div className="text-3xl font-bold text-foreground mb-2">
           {typeof value === 'number' ? value.toLocaleString() : value}
         </div>
         {change && (
-          <p className={cn(
-            "text-xs mt-1",
-            changeType === 'positive' && "text-success",
-            changeType === 'negative' && "text-destructive",
-            changeType === 'neutral' && "text-muted-foreground"
-          )}>
-            {change}
-          </p>
+                  <p className={cn(
+          "text-sm font-medium",
+          changeType === 'positive' && "text-emerald-600 dark:text-emerald-400",
+          changeType === 'negative' && "text-red-600 dark:text-red-400",
+          changeType === 'neutral' && "text-slate-600 dark:text-slate-400"
+        )}>
+          {change}
+        </p>
         )}
       </CardContent>
     </Card>

@@ -8,17 +8,12 @@ import { TrendingUp, BarChart3, Calendar } from 'lucide-react';
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
 
 export default function Charts() {
-  const { data: dailyChart, isLoading: dailyLoading } = useQuery({
-    queryKey: ['daily-chart'],
-    queryFn: dashboardApi.getDailyChart,
+  const { data: overview, isLoading: overviewLoading } = useQuery({
+    queryKey: ['dashboard-overview'],
+    queryFn: dashboardApi.getOverview,
   });
 
-  const { data: monthlyChart, isLoading: monthlyLoading } = useQuery({
-    queryKey: ['monthly-chart'],
-    queryFn: dashboardApi.getMonthlyChart,
-  });
-
-  const { data: userStats } = useQuery({
+  const { data: userStats, isLoading: userStatsLoading } = useQuery({
     queryKey: ['user-stats'],
     queryFn: dashboardApi.getUserStats,
   });
@@ -31,28 +26,28 @@ export default function Charts() {
     }).format(value);
   };
 
-  const dailyData = dailyChart ? dailyChart.labels.map((label, index) => ({
-    date: label,
-    revenue: dailyChart.revenue[index],
-    transactions: dailyChart.transactions[index],
-    profit: dailyChart.profit[index],
+  const dailyData = overview?.chartData?.daily ? overview.chartData.daily.map((item) => ({
+    date: item.date,
+    revenue: item.pendapatan,
+    transactions: item.transaksi,
+    profit: item.pendapatan * 0.1, // Assuming 10% profit
   })) : [];
 
-  const monthlyData = monthlyChart ? monthlyChart.labels.map((label, index) => ({
-    month: label,
-    revenue: monthlyChart.revenue[index],
-    transactions: monthlyChart.transactions[index],
-    profit: monthlyChart.profit[index],
-    userGrowth: monthlyChart.userGrowth?.[index] || 0,
+  const monthlyData = overview?.chartData?.monthly ? overview.chartData.monthly.map((item) => ({
+    month: item.month,
+    revenue: item.pendapatan,
+    transactions: item.transaksi,
+    profit: item.pendapatan * 0.1, // Assuming 10% profit
+    userGrowth: 0, // Not available in current API
   })) : [];
 
-  const userRoleData = userStats ? Object.entries(userStats.userStats).map(([role, stats]) => ({
+  const userRoleData = userStats ? Object.entries(userStats.userStats || {}).map(([role, stats]) => ({
     name: role.charAt(0).toUpperCase() + role.slice(1),
     value: stats.count,
     saldo: stats.totalSaldo,
   })) : [];
 
-  const isLoading = dailyLoading || monthlyLoading;
+  const isLoading = overviewLoading || userStatsLoading;
 
   if (isLoading) {
     return (

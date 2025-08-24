@@ -63,7 +63,6 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				success: 'hsl(var(--success))',
-				warning: 'hsl(var(--warning))',
 				info: 'hsl(var(--info))'
 			},
 			backgroundImage: {
@@ -77,7 +76,8 @@ export default {
 				'elevated': 'var(--shadow-elevated)'
 			},
 			fontFamily: {
-				sans: ['Inter', 'system-ui', 'sans-serif']
+				sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+				'jakarta': ['Plus Jakarta Sans', 'sans-serif']
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

@@ -23,14 +23,18 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
 
-  const { data: userActivity, isLoading } = useQuery({
+  const { data: userActivity, isLoading: userActivityLoading, error: userActivityError } = useQuery({
     queryKey: ['user-activity'],
     queryFn: dashboardApi.getUserActivity,
+    retry: 1,
+    retryDelay: 1000,
   });
 
-  const { data: userStats } = useQuery({
+  const { data: userStats, isLoading: userStatsLoading, error: userStatsError } = useQuery({
     queryKey: ['user-stats'],
     queryFn: dashboardApi.getUserStats,
+    retry: 1,
+    retryDelay: 1000,
   });
 
   // Query for specific user transactions when a user is selected
@@ -38,6 +42,8 @@ export default function UsersPage() {
     queryKey: ['user-transactions', selectedUser],
     queryFn: () => selectedUser ? dashboardApi.getUserTransactions(selectedUser) : null,
     enabled: !!selectedUser,
+    retry: 1,
+    retryDelay: 1000,
   });
 
   const formatCurrency = (value: number) => {
@@ -61,12 +67,14 @@ export default function UsersPage() {
     }
   };
 
-  const filteredUsers = userActivity?.userActivity.filter((user) => {
+  const filteredUsers = userActivity?.userActivity?.filter((user) => {
     const matchesSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.userId.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     return matchesSearch && matchesRole;
   }) || [];
+
+  const isLoading = userActivityLoading || userStatsLoading;
 
   if (isLoading) {
     return (
@@ -74,6 +82,20 @@ export default function UsersPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading users...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle errors
+  if (userActivityError || userStatsError) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-destructive mb-2">Failed to load user data</p>
+          <p className="text-sm text-muted-foreground">
+            {userActivityError?.message || userStatsError?.message || 'Please check your API connection'}
+          </p>
         </div>
       </div>
     );

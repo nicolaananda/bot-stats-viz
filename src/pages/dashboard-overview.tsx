@@ -6,6 +6,7 @@ import { EnvironmentBanner } from '@/components/ui/environment-banner';
 import { dashboardApi } from '@/services/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { formatCurrency, formatDate } from '@/lib/utils';
 
 export default function DashboardOverview() {
   const { data: overview, isLoading, error } = useQuery({
@@ -45,74 +46,68 @@ export default function DashboardOverview() {
     );
   }
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).format(value);
-  };
 
-  const chartData = dailyChart ? dailyChart.labels.map((label, index) => ({
-    date: label,
-    revenue: dailyChart.revenue[index],
-    transactions: dailyChart.transactions[index],
-    profit: dailyChart.profit[index],
+
+  const chartData = overview?.chartData?.daily ? overview.chartData.daily.map((item) => ({
+    date: item.date,
+    revenue: item.pendapatan,
+    transactions: item.transaksi,
+    profit: item.pendapatan * 0.1, // Assuming 10% profit
   })) : [];
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-8 p-8">
       <EnvironmentBanner />
       
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight bg-gradient-primary bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold tracking-tight text-foreground">
             Dashboard Overview
-          </h2>
-          <p className="text-muted-foreground">
-            Your WhatsApp bot performance analytics
+          </h1>
+          <p className="text-lg text-muted-foreground mt-2">
+            Comprehensive analytics for your WhatsApp bot performance
           </p>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
-          title="Total Revenue"
-          value={formatCurrency(overview?.totalRevenue || 0)}
-          change={`+${overview?.quickStats.monthlyGrowth || 0}% from last month`}
+          title="Total Pendapatan"
+          value={formatCurrency(overview?.totalPendapatan || 0)}
+          change={`${overview?.transaksiHariIni || 0} transaksi hari ini`}
           changeType="positive"
           icon={DollarSign}
-          className="hover:scale-105"
+          className="group hover:shadow-elevated transition-all duration-300 border-0 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20"
         />
         <StatsCard
-          title="Total Users"
-          value={overview?.totalUsers || 0}
-          change={`+${overview?.quickStats.userGrowth || 0}% growth`}
-          changeType="positive"
-          icon={Users}
-          className="hover:scale-105"
-        />
-        <StatsCard
-          title="Total Transactions"
-          value={overview?.totalTransactions || 0}
-          change={`${overview?.quickStats.todayTransactions || 0} today`}
+          title="Total Transaksi"
+          value={overview?.totalTransaksi || 0}
+          change={`${overview?.transaksiHariIni || 0} hari ini`}
           changeType="neutral"
           icon={CreditCard}
-          className="hover:scale-105"
+          className="group hover:shadow-elevated transition-all duration-300 border-0 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20"
         />
         <StatsCard
-          title="Total Profit"
-          value={formatCurrency(overview?.totalProfit || 0)}
-          change={formatCurrency(overview?.quickStats.todayRevenue || 0) + " today"}
+          title="Pendapatan Hari Ini"
+          value={formatCurrency(overview?.pendapatanHariIni || 0)}
+          change="Hari ini"
           changeType="positive"
           icon={TrendingUp}
-          className="hover:scale-105"
+          className="group hover:shadow-elevated transition-all duration-300 border-0 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20"
+        />
+        <StatsCard
+          title="Metode Pembayaran"
+          value={`${overview?.metodeBayar?.qris || 0} QRIS, ${overview?.metodeBayar?.saldo || 0} Saldo`}
+          change={`${overview?.metodeBayar?.unknown || 0} lainnya`}
+          changeType="neutral"
+          icon={Users}
+          className="group hover:shadow-elevated transition-all duration-300 border-0 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20"
         />
       </div>
 
       {/* Charts and Recent Activity */}
-      <div className="grid gap-6 md:grid-cols-7">
+      <div className="grid gap-8 md:grid-cols-7">
         <div className="col-span-4">
           <OverviewChart 
             data={chartData}
@@ -122,35 +117,39 @@ export default function DashboardOverview() {
         </div>
         
         <div className="col-span-3">
-          <Card className="shadow-card border-0 bg-card/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Recent Activity
+          <Card className="border-0 bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-900/50 dark:to-gray-900/50 shadow-elevated">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 text-lg font-semibold">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Activity className="h-5 w-5 text-primary" />
+                </div>
+                Metode Pembayaran
               </CardTitle>
-              <CardDescription>Latest transactions and events</CardDescription>
+              <CardDescription className="text-muted-foreground">Statistik metode pembayaran</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {overview?.recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-center space-x-4">
-                    <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    <div className="flex-1 space-y-1">
-                      <p className="text-sm font-medium">{activity.description}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(activity.timestamp).toLocaleString()}
-                      </p>
-                    </div>
-                    <Badge variant="secondary" className="text-xs">
-                      {activity.type}
-                    </Badge>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-4 rounded-xl bg-white/60 dark:bg-slate-800/60 border border-white/20 dark:border-slate-700/20">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    <span className="font-medium text-foreground">QRIS</span>
                   </div>
-                ))}
-                {(!overview?.recentActivity || overview.recentActivity.length === 0) && (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No recent activity
-                  </p>
-                )}
+                  <Badge variant="secondary" className="font-semibold px-3 py-1">{overview?.metodeBayar?.qris || 0}</Badge>
+                </div>
+                <div className="flex items-center justify-between p-4 rounded-xl bg-white/60 dark:bg-slate-800/60 border border-white/20 dark:border-slate-700/20">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
+                    <span className="font-medium text-foreground">Saldo</span>
+                  </div>
+                  <Badge variant="secondary" className="font-semibold px-3 py-1">{overview?.metodeBayar?.saldo || 0}</Badge>
+                </div>
+                <div className="flex items-center justify-between p-4 rounded-xl bg-white/60 dark:bg-slate-800/60 border border-white/20 dark:border-slate-700/20">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-slate-500 rounded-full"></div>
+                    <span className="font-medium text-foreground">Lainnya</span>
+                  </div>
+                  <Badge variant="secondary" className="font-semibold px-3 py-1">{overview?.metodeBayar?.unknown || 0}</Badge>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -158,19 +157,22 @@ export default function DashboardOverview() {
       </div>
 
       {/* Recent Transactions */}
-      <Card className="shadow-card border-0 bg-card/50 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
-          <CardDescription>Latest transactions from your WhatsApp bot</CardDescription>
+      <Card className="border-0 bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-900/50 dark:to-gray-900/50 shadow-elevated">
+        <CardHeader className="pb-6">
+          <CardTitle className="text-xl font-semibold">Recent Transactions</CardTitle>
+          <CardDescription className="text-muted-foreground">Latest transactions from your WhatsApp bot</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {recentTransactions?.transactions.map((transaction) => (
-              <div key={transaction.reffId} className="flex items-center justify-between p-4 rounded-lg border border-border/50 hover:bg-accent/50 transition-colors">
+              <div key={transaction.reffId} className="group flex items-center justify-between p-4 rounded-xl bg-white/60 dark:bg-slate-800/60 border border-white/20 dark:border-slate-700/20 hover:bg-white/80 dark:hover:bg-slate-800/80 hover:shadow-elevated transition-all duration-300">
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <CreditCard className="h-4 w-4 text-primary" />
+                    </div>
                     <div>
-                      <p className="font-medium">{transaction.name}</p>
+                      <p className="font-semibold text-foreground">{transaction.name}</p>
                       <p className="text-sm text-muted-foreground">
                         {transaction.user} • {transaction.metodeBayar}
                       </p>
@@ -178,15 +180,18 @@ export default function DashboardOverview() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium">{formatCurrency(transaction.totalBayar)}</p>
-                  <p className="text-xs text-muted-foreground">{transaction.date}</p>
+                  <p className="font-bold text-lg text-foreground">{formatCurrency(transaction.totalBayar)}</p>
+                  <p className="text-xs text-muted-foreground">{formatDate(transaction.date, 'short')}</p>
                 </div>
               </div>
             ))}
             {(!recentTransactions?.transactions || recentTransactions.transactions.length === 0) && (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                No recent transactions
-              </p>
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CreditCard className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <p className="text-muted-foreground">No recent transactions</p>
+              </div>
             )}
           </div>
         </CardContent>

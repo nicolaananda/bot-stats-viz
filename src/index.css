@@ -8,112 +8,108 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    /* Professional Color Scheme - SOFT COLORS */
     --background: 248 250 252;
-    --foreground: 213 27% 15%;
+    --foreground: 51 65 85;
 
     --card: 255 255 255;
-    --card-foreground: 213 27% 15%;
+    --card-foreground: 51 65 85;
 
     --popover: 255 255 255;
-    --popover-foreground: 213 27% 15%;
+    --popover-foreground: 51 65 85;
 
-    --primary: 238 75% 65%;
+    --primary: 71 85 105;
     --primary-foreground: 255 255 255;
 
-    --secondary: 248 250 252;
-    --secondary-foreground: 213 27% 15%;
+    --secondary: 241 245 249;
+    --secondary-foreground: 71 85 105;
 
-    --muted: 241 245 249;
-    --muted-foreground: 213 13% 45%;
+    --muted: 226 232 240;
+    --muted-foreground: 100 116 139;
 
-    --accent: 241 245 249;
-    --accent-foreground: 213 27% 15%;
+    --accent: 226 232 240;
+    --accent-foreground: 71 85 105;
 
-    --destructive: 0 84% 60%;
+    --destructive: 239 68 68;
     --destructive-foreground: 255 255 255;
 
-    --border: 226 35% 90%;
-    --input: 226 35% 90%;
-    --ring: 238 75% 65%;
+    --border: 203 213 225;
+    --input: 203 213 225;
+    --ring: 71 85 105;
 
-    /* Custom design tokens */
-    --gradient-primary: linear-gradient(135deg, hsl(238, 75%, 65%), hsl(266, 85%, 70%));
-    --gradient-secondary: linear-gradient(135deg, hsl(213, 100%, 96%), hsl(238, 100%, 98%));
-    --gradient-accent: linear-gradient(135deg, hsl(199, 89%, 48%), hsl(238, 75%, 65%));
+    /* Professional Gradients - SOFT COLORS */
+    --gradient-primary: linear-gradient(135deg, hsl(71, 85%, 105%), hsl(100, 116%, 139%));
+    --gradient-secondary: linear-gradient(135deg, hsl(241, 245%, 249%), hsl(226, 232%, 240%));
+    --gradient-accent: linear-gradient(135deg, hsl(34, 197, 94), hsl(71, 85%, 105%));
     
-    --shadow-glow: 0 0 40px hsl(238 75% 65% / 0.15);
-    --shadow-card: 0 4px 20px hsl(213 27% 15% / 0.08);
-    --shadow-elevated: 0 8px 32px hsl(213 27% 15% / 0.12);
+    /* Refined Shadows */
+    --shadow-glow: 0 0 40px hsl(71 85 105 / 0.08);
+    --shadow-card: 0 1px 3px hsl(0 0 0 / 0.1), 0 1px 2px hsl(0 0 0 / 0.06);
+    --shadow-elevated: 0 4px 6px hsl(0 0 0 / 0.07), 0 2px 4px hsl(0 0 0 / 0.06);
     
-    --success: 142 76% 36%;
-    --warning: 38 92% 50%;
-    --info: 217 91% 60%;
+    /* Professional Status Colors */
+    --success: 34 197 94;
+    --info: 71 85 105;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Sidebar Colors - SOFT COLORS */
+    --sidebar-background: 248 250 252;
+    --sidebar-foreground: 71 85 105;
+    --sidebar-primary: 71 85 105;
+    --sidebar-primary-foreground: 255 255 255;
+    --sidebar-accent: 241 245 249;
+    --sidebar-accent-foreground: 71 85 105;
+    --sidebar-border: 203 213 225;
+    --sidebar-ring: 71 85 105;
   }
 
   .dark {
     --background: 15 23 42;
-    --foreground: 226 100% 97%;
+    --foreground: 226 232 240;
 
     --card: 30 41 59;
-    --card-foreground: 226 100% 97%;
+    --card-foreground: 226 232 240;
 
     --popover: 30 41 59;
-    --popover-foreground: 226 100% 97%;
+    --popover-foreground: 226 232 240;
 
-    --primary: 238 75% 65%;
+    --primary: 71 85 105;
     --primary-foreground: 15 23 42;
 
-    --secondary: 30 41 59;
-    --secondary-foreground: 226 100% 97%;
+    --secondary: 51 65 85;
+    --secondary-foreground: 226 232 240;
 
     --muted: 51 65 85;
-    --muted-foreground: 215 25% 65%;
+    --muted-foreground: 148 163 184;
 
     --accent: 51 65 85;
-    --accent-foreground: 226 100% 97%;
+    --accent-foreground: 226 232 240;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 226 100% 97%;
+    --destructive: 239 68 68;
+    --destructive-foreground: 226 232 240;
 
     --border: 51 65 85;
     --input: 51 65 85;
-    --ring: 238 75% 65%;
+    --ring: 71 85 105;
 
-    /* Dark mode gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(238, 75%, 65%), hsl(266, 85%, 70%));
-    --gradient-secondary: linear-gradient(135deg, hsl(30, 41%, 59%), hsl(51, 65%, 85%));
-    --gradient-accent: linear-gradient(135deg, hsl(199, 89%, 48%), hsl(238, 75%, 65%));
+    /* Dark mode gradients - SOFT COLORS */
+    --gradient-primary: linear-gradient(135deg, hsl(71, 85%, 105%), hsl(100, 116%, 139%));
+    --gradient-secondary: linear-gradient(135deg, hsl(51, 65%, 85%), hsl(71, 85%, 105%));
+    --gradient-accent: linear-gradient(135deg, hsl(34, 197, 94), hsl(71, 85%, 105%));
     
-    --shadow-glow: 0 0 40px hsl(238 75% 65% / 0.25);
+    --shadow-glow: 0 0 40px hsl(71 85 105 / 0.15);
     --shadow-card: 0 4px 20px hsl(15 23% 42% / 0.15);
     --shadow-elevated: 0 8px 32px hsl(15 23% 42% / 0.25);
 
     --sidebar-background: 15 23 42;
-    --sidebar-foreground: 226 100% 97%;
-    --sidebar-primary: 238 75% 65%;
+    --sidebar-foreground: 148 163 184;
+    --sidebar-primary: 71 85 105;
     --sidebar-primary-foreground: 15 23 42;
-    --sidebar-accent: 30 41 59;
-    --sidebar-accent-foreground: 226 100% 97%;
-    --sidebar-border: 51 65 85;
-    --sidebar-ring: 238 75% 65%;
+    --sidebar-accent: 51 65 85;
+    --sidebar-accent-foreground: 148 163 184;
+    --sidebar-border: 71 85 105;
+    --sidebar-ring: 71 85 105;
   }
 }
 
@@ -123,7 +119,8 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-jakarta;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
 
@@ -170,20 +167,12 @@ All colors MUST be HSL.
     color: hsl(var(--success));
   }
   
-  .text-warning {
-    color: hsl(var(--warning));
-  }
-  
   .text-info {
     color: hsl(var(--info));
   }
 
   .bg-success {
     background-color: hsl(var(--success));
-  }
-  
-  .bg-warning {
-    background-color: hsl(var(--warning));
   }
   
   .bg-info {

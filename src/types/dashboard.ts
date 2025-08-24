@@ -6,20 +6,28 @@ export interface ApiResponse<T> {
 }
 
 export interface DashboardOverview {
-  totalUsers: number;
-  totalTransactions: number;
-  totalRevenue: number;
-  totalProfit: number;
-  recentActivity: Array<{
-    type: string;
-    description: string;
-    timestamp: string;
-  }>;
-  quickStats: {
-    todayRevenue: number;
-    todayTransactions: number;
-    monthlyGrowth: number;
-    userGrowth: number;
+  totalTransaksi: number;
+  totalPendapatan: number;
+  transaksiHariIni: number;
+  pendapatanHariIni: number;
+  metodeBayar: {
+    saldo: number;
+    qris: number;
+    unknown: number;
+  };
+  topUsers: any[];
+  chartData: {
+    daily: Array<{
+      date: string;
+      transaksi: number;
+      pendapatan: number;
+    }>;
+    monthly: Array<{
+      month: string;
+      transaksi: number;
+      pendapatan: number;
+    }>;
+    userActivity: any[];
   };
 }
 
@@ -29,6 +37,21 @@ export interface ChartData {
   transactions: number[];
   profit: number[];
   userGrowth?: number[];
+}
+
+export interface DailyChartData {
+  labels: string[];
+  revenue: number[];
+  transactions: number[];
+  profit: number[];
+}
+
+export interface MonthlyChartData {
+  labels: string[];
+  revenue: number[];
+  transactions: number[];
+  profit: number[];
+  userGrowth: number[];
 }
 
 export interface UserActivity {

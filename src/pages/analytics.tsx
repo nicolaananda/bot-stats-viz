@@ -7,24 +7,25 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { dashboardApi } from '@/services/api';
 
 export default function AnalyticsPage() {
-  const { data: overview } = useQuery({
+  const { data: overview, isLoading: overviewLoading, error: overviewError } = useQuery({
     queryKey: ['dashboard-overview'],
     queryFn: dashboardApi.getOverview,
+    retry: 1,
+    retryDelay: 1000,
   });
 
-  const { data: userActivity } = useQuery({
+  const { data: userActivity, isLoading: userActivityLoading, error: userActivityError } = useQuery({
     queryKey: ['user-activity'],
     queryFn: dashboardApi.getUserActivity,
+    retry: 1,
+    retryDelay: 1000,
   });
 
-  const { data: dailyChart } = useQuery({
-    queryKey: ['daily-chart'],
-    queryFn: dashboardApi.getDailyChart,
-  });
-
-  const { data: monthlyChart } = useQuery({
-    queryKey: ['monthly-chart'],
-    queryFn: dashboardApi.getMonthlyChart,
+  const { data: userStats, isLoading: userStatsLoading, error: userStatsError } = useQuery({
+    queryKey: ['user-stats'],
+    queryFn: dashboardApi.getUserStats,
+    retry: 1,
+    retryDelay: 1000,
   });
 
   const formatCurrency = (value: number) => {
@@ -35,23 +36,50 @@ export default function AnalyticsPage() {
     }).format(value);
   };
 
-  const dailyTrendData = dailyChart ? dailyChart.labels.map((label, index) => ({
-    date: label,
-    revenue: dailyChart.revenue[index],
-    transactions: dailyChart.transactions[index],
+  const dailyTrendData = overview?.chartData?.daily ? overview.chartData.daily.map((item) => ({
+    date: item.date,
+    revenue: item.pendapatan,
+    transactions: item.transaksi,
   })) : [];
 
-  const userTrendData = userActivity ? userActivity.activityTrends.dailyActive.map((count, index) => ({
+  const userTrendData = userActivity?.activityTrends?.dailyActive ? userActivity.activityTrends.dailyActive.map((count, index) => ({
     day: `Day ${index + 1}`,
     active: count,
   })) : [];
 
   const conversionData = overview ? [
-    { name: 'Visitors', value: (overview.totalUsers || 0) * 1.5, fill: 'hsl(var(--muted))' },
-    { name: 'Users', value: overview.totalUsers || 0, fill: 'hsl(var(--primary))' },
-    { name: 'Active', value: userActivity?.activeUsers || 0, fill: 'hsl(var(--success))' },
-    { name: 'Converting', value: Math.floor((overview.totalTransactions || 0) / 10), fill: 'hsl(var(--warning))' },
+    { name: 'Total Transaksi', value: overview.totalTransaksi || 0, fill: 'hsl(var(--primary))' },
+    { name: 'Transaksi Hari Ini', value: overview.transaksiHariIni || 0, fill: 'hsl(var(--success))' },
+    { name: 'Total Pendapatan', value: Math.floor((overview.totalPendapatan || 0) / 1000), fill: 'hsl(168 85% 47%)' },
+    { name: 'Pendapatan Hari Ini', value: Math.floor((overview.pendapatanHariIni || 0) / 1000), fill: 'hsl(var(--muted))' },
   ] : [];
+
+  const isLoading = overviewLoading || userActivityLoading || userStatsLoading;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading analytics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle errors
+  if (overviewError || userActivityError || userStatsError) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-destructive mb-2">Failed to load analytics data</p>
+          <p className="text-sm text-muted-foreground">
+            {overviewError?.message || userActivityError?.message || userStatsError?.message || 'Please check your API connection'}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -69,31 +97,31 @@ export default function AnalyticsPage() {
       {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
-          title="Growth Rate"
-          value={`${overview?.quickStats.monthlyGrowth || 0}%`}
-          change="Monthly"
+          title="Transaksi Hari Ini"
+          value={overview?.transaksiHariIni || 0}
+          change="Hari ini"
           changeType="positive"
           icon={TrendingUp}
           className="hover:scale-105"
         />
         <StatsCard
-          title="User Engagement"
-          value={`${Math.round(((userActivity?.activeUsers || 0) / (overview?.totalUsers || 1)) * 100)}%`}
-          change="Active users ratio"
+          title="Pendapatan Hari Ini"
+          value={formatCurrency(overview?.pendapatanHariIni || 0)}
+          change="Hari ini"
           changeType="positive"
           icon={Activity}
           className="hover:scale-105"
         />
         <StatsCard
-          title="Avg Revenue per User"
-          value={formatCurrency((overview?.totalRevenue || 0) / (overview?.totalUsers || 1))}
+          title="Total Transaksi"
+          value={overview?.totalTransaksi || 0}
           icon={Users}
           className="hover:scale-105"
         />
         <StatsCard
-          title="Conversion Rate"
-          value={`${Math.round(((overview?.totalTransactions || 0) / (overview?.totalUsers || 1)) * 100)}%`}
-          change="Users to transactions"
+          title="Total Pendapatan"
+          value={formatCurrency(overview?.totalPendapatan || 0)}
+          change="Total"
           changeType="positive"
           icon={Target}
           className="hover:scale-105"
@@ -194,13 +222,13 @@ export default function AnalyticsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center p-3 bg-accent/30 rounded-lg">
-                  <span className="text-sm font-medium">Revenue Growth</span>
-                  <span className="text-lg font-bold text-success">+{overview?.quickStats.monthlyGrowth || 0}%</span>
+                  <span className="text-sm font-medium">Transaksi Hari Ini</span>
+                  <span className="text-lg font-bold text-success">{overview?.transaksiHariIni || 0}</span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-accent/30 rounded-lg">
-                  <span className="text-sm font-medium">User Retention</span>
+                  <span className="text-sm font-medium">Pendapatan Hari Ini</span>
                   <span className="text-lg font-bold text-primary">
-                    {Math.round(((userActivity?.activeUsers || 0) / (overview?.totalUsers || 1)) * 100)}%
+                    {formatCurrency(overview?.pendapatanHariIni || 0)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-accent/30 rounded-lg">
@@ -209,7 +237,7 @@ export default function AnalyticsPage() {
                 </div>
                 <div className="flex justify-between items-center p-3 bg-accent/30 rounded-lg">
                   <span className="text-sm font-medium">Average Response Time</span>
-                  <span className="text-lg font-bold text-warning">2.3s</span>
+                  <span className="text-lg font-bold text-purple-600 dark:text-purple-400">2.3s</span>
                 </div>
               </CardContent>
             </Card>
@@ -261,21 +289,21 @@ export default function AnalyticsPage() {
                   <div className="p-4 bg-gradient-secondary rounded-lg border-l-4 border-primary">
                     <h4 className="font-semibold text-primary mb-2">🚀 Growth Opportunity</h4>
                     <p className="text-sm text-muted-foreground">
-                      Your revenue has grown by {overview?.quickStats.monthlyGrowth || 0}% this month. 
-                      Consider expanding your product offerings to maintain this growth trajectory.
+                      Transaksi hari ini: {overview?.transaksiHariIni || 0} dengan pendapatan {formatCurrency(overview?.pendapatanHariIni || 0)}. 
+                      Pertimbangkan untuk memperluas layanan untuk mempertahankan pertumbuhan ini.
                     </p>
                   </div>
                   
                   <div className="p-4 bg-gradient-secondary rounded-lg border-l-4 border-success">
                     <h4 className="font-semibold text-success mb-2">✅ High Engagement</h4>
                     <p className="text-sm text-muted-foreground">
-                      {Math.round(((userActivity?.activeUsers || 0) / (overview?.totalUsers || 1)) * 100)}% of your users are active. 
-                      This indicates strong product-market fit and user satisfaction.
+                      Total transaksi: {overview?.totalTransaksi || 0} dengan total pendapatan {formatCurrency(overview?.totalPendapatan || 0)}. 
+                      Ini menunjukkan engagement yang kuat dari pengguna.
                     </p>
                   </div>
 
-                  <div className="p-4 bg-gradient-secondary rounded-lg border-l-4 border-warning">
-                    <h4 className="font-semibold text-warning mb-2">⚡ Optimization Tip</h4>
+                  <div className="p-4 bg-gradient-secondary rounded-lg border-l-4 border-purple-500">
+                    <h4 className="font-semibold text-purple-600 dark:text-purple-400 mb-2">⚡ Optimization Tip</h4>
                     <p className="text-sm text-muted-foreground">
                       Peak transaction times appear to be during certain hours. 
                       Consider automated messaging during these periods to maximize conversions.
@@ -285,8 +313,8 @@ export default function AnalyticsPage() {
                   <div className="p-4 bg-gradient-secondary rounded-lg border-l-4 border-info">
                     <h4 className="font-semibold text-info mb-2">📊 Data Quality</h4>
                     <p className="text-sm text-muted-foreground">
-                      Your data collection is comprehensive with {overview?.totalTransactions || 0} total transactions recorded. 
-                      This provides excellent visibility into user behavior patterns.
+                      Data collection Anda komprehensif dengan {overview?.totalTransaksi || 0} total transaksi tercatat. 
+                      Ini memberikan visibilitas yang sangat baik ke dalam pola perilaku pengguna.
                     </p>
                   </div>
                 </div>

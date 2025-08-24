@@ -2,6 +2,8 @@ import axios from 'axios';
 import {
   DashboardOverview,
   ChartData,
+  DailyChartData,
+  MonthlyChartData,
   UserActivity,
   UserTransactions,
   TransactionDetail,
@@ -11,15 +13,18 @@ import {
   ExportResponse,
   ApiResponse
 } from '@/types/dashboard';
+import { API_CONFIG, API_ENDPOINTS } from '@/config/api';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
-  timeout: 10000,
+  baseURL: API_CONFIG.baseURL,
+  timeout: API_CONFIG.timeout,
 });
 
 // Request interceptor for logging
 api.interceptors.request.use((config) => {
-  console.log(`Making ${config.method?.toUpperCase()} request to ${config.url}`);
+  if (API_CONFIG.enableLogging) {
+    console.log(`Making ${config.method?.toUpperCase()} request to ${config.url}`);
+  }
   return config;
 });
 
@@ -35,7 +40,7 @@ api.interceptors.response.use(
 export const dashboardApi = {
   // Dashboard Overview
   async getOverview(): Promise<DashboardOverview> {
-    const response = await api.get<ApiResponse<DashboardOverview>>('/api/dashboard/overview');
+    const response = await api.get<ApiResponse<DashboardOverview>>(API_ENDPOINTS.dashboard.overview);
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -43,16 +48,16 @@ export const dashboardApi = {
   },
 
   // Chart Data
-  async getDailyChart(): Promise<ChartData> {
-    const response = await api.get<ApiResponse<ChartData>>('/api/dashboard/chart/daily');
+  async getDailyChart(): Promise<DailyChartData> {
+    const response = await api.get<ApiResponse<DailyChartData>>(API_ENDPOINTS.dashboard.dailyChart);
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
     throw new Error(response.data.error || 'Failed to fetch daily chart data');
   },
 
-  async getMonthlyChart(): Promise<ChartData> {
-    const response = await api.get<ApiResponse<ChartData>>('/api/dashboard/chart/monthly');
+  async getMonthlyChart(): Promise<MonthlyChartData> {
+    const response = await api.get<ApiResponse<MonthlyChartData>>(API_ENDPOINTS.dashboard.monthlyChart);
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -61,7 +66,7 @@ export const dashboardApi = {
 
   // User Management
   async getUserActivity(): Promise<UserActivity> {
-    const response = await api.get<ApiResponse<UserActivity>>('/api/dashboard/users/activity');
+    const response = await api.get<ApiResponse<UserActivity>>(API_ENDPOINTS.users.activity);
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -69,7 +74,7 @@ export const dashboardApi = {
   },
 
   async getUserTransactions(userId: string): Promise<UserTransactions> {
-    const response = await api.get<ApiResponse<UserTransactions>>(`/api/dashboard/users/${userId}/transactions`);
+    const response = await api.get<ApiResponse<UserTransactions>>(API_ENDPOINTS.users.transactions(userId));
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -77,7 +82,7 @@ export const dashboardApi = {
   },
 
   async getUserStats(): Promise<UserStats> {
-    const response = await api.get<ApiResponse<UserStats>>('/api/dashboard/users/stats');
+    const response = await api.get<ApiResponse<UserStats>>(API_ENDPOINTS.users.stats);
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -86,7 +91,7 @@ export const dashboardApi = {
 
   // Transactions
   async searchTransaction(reffId: string): Promise<TransactionDetail> {
-    const response = await api.get<ApiResponse<TransactionDetail>>(`/api/dashboard/transactions/search/${reffId}`);
+    const response = await api.get<ApiResponse<TransactionDetail>>(API_ENDPOINTS.transactions.search(reffId));
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -94,7 +99,7 @@ export const dashboardApi = {
   },
 
   async getRecentTransactions(limit: number = 20): Promise<RecentTransactions> {
-    const response = await api.get<ApiResponse<RecentTransactions>>(`/api/dashboard/transactions/recent?limit=${limit}`);
+    const response = await api.get<ApiResponse<RecentTransactions>>(API_ENDPOINTS.transactions.recent(limit));
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -103,7 +108,7 @@ export const dashboardApi = {
 
   // Products
   async getProductStats(): Promise<ProductStats> {
-    const response = await api.get<ApiResponse<ProductStats>>('/api/dashboard/products/stats');
+    const response = await api.get<ApiResponse<ProductStats>>(API_ENDPOINTS.products.stats);
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -112,7 +117,7 @@ export const dashboardApi = {
 
   // Export
   async exportData(format: string): Promise<ExportResponse> {
-    const response = await api.get<ExportResponse>(`/api/dashboard/export/${format}`);
+    const response = await api.get<ExportResponse>(API_ENDPOINTS.export(format));
     return response.data;
   }
 };
