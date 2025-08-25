@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { StatsCard } from '@/components/ui/stats-card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import { dashboardApi } from '@/services/api';
 
 const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))'];
@@ -110,7 +110,7 @@ export default function ProductsPage() {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} layout="horizontal">
+                <AreaChart data={chartData} layout="horizontal">
                   <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                   <XAxis type="number" className="text-xs" />
                   <YAxis dataKey="name" type="category" className="text-xs" width={100} />
@@ -123,12 +123,14 @@ export default function ProductsPage() {
                       borderRadius: '8px',
                     }}
                   />
-                  <Bar 
+                  <Area 
+                    type="monotone"
                     dataKey="sold" 
                     fill="hsl(var(--chart-2))"
-                    radius={[0, 4, 4, 0]}
+                    stroke="hsl(var(--chart-2))"
+                    fillOpacity={0.6}
                   />
-                </BarChart>
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           </CardContent>

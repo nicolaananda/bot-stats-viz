@@ -25,7 +25,6 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   if (API_CONFIG.enableLogging) {
     console.log(`Making ${config.method?.toUpperCase()} request to ${config.url}`);
-    console.log(`Full URL: ${config.baseURL}${config.url}`);
   }
   return config;
 });
@@ -35,18 +34,6 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error('API Error:', error.response?.data || error.message);
-    
-    // Handle HTTPS/SSL specific errors
-    if (error.code === 'ECONNREFUSED') {
-      console.error('Connection refused. Check if the API server is running.');
-    } else if (error.code === 'ENOTFOUND') {
-      console.error('API server not found. Check the URL configuration.');
-    } else if (error.message?.includes('SSL')) {
-      console.error('SSL/TLS error. Check certificate configuration.');
-    } else if (error.message?.includes('CERT')) {
-      console.error('Certificate error. Check SSL configuration.');
-    }
-    
     return Promise.reject(error);
   }
 );
@@ -231,7 +218,6 @@ export const dashboardApi = {
           if (!response.data.data.transaksi || !Array.isArray(response.data.data.transaksi)) {
             console.warn('getUserTransactions: transaksi is not an array:', response.data.data.transaksi);
             return {
-              userId: tryUserId,
               user: tryUserId,
               transaksi: [],
               totalTransaksi: 0,
