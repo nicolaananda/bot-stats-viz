@@ -7,15 +7,19 @@ interface ChartDataPoint {
   revenue: number;
   transactions: number;
   profit: number;
+  movingAverageRevenue?: number;
+  forecastRevenue?: number;
 }
 
 interface OverviewChartProps {
   data: ChartDataPoint[];
   title?: string;
   description?: string;
+  showMovingAverage?: boolean;
+  showForecast?: boolean;
 }
 
-export function OverviewChart({ data, title = "Revenue Overview", description = "Your revenue and transaction trends" }: OverviewChartProps) {
+export function OverviewChart({ data, title = "Revenue Overview", description = "Your revenue and transaction trends", showMovingAverage = false, showForecast = false }: OverviewChartProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
@@ -25,7 +29,7 @@ export function OverviewChart({ data, title = "Revenue Overview", description = 
   };
 
   return (
-    <Card className="border-0 bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-900/50 dark:to-gray-900/50 shadow-elevated">
+    <Card className="border-0 bg-white/60 dark:bg-slate-900/40 backdrop-blur-sm shadow-elevated ring-1 ring-black/5">
       <CardHeader className="pb-6">
         <CardTitle className="text-xl font-semibold text-foreground">
           {title}
@@ -75,6 +79,26 @@ export function OverviewChart({ data, title = "Revenue Overview", description = 
                     dot={{ fill: 'hsl(var(--chart-1))', strokeWidth: 2, r: 5 }}
                     activeDot={{ r: 8, stroke: 'hsl(var(--chart-1))', strokeWidth: 2 }}
                   />
+                  {showMovingAverage && (
+                    <Line
+                      type="monotone"
+                      dataKey="movingAverageRevenue"
+                      stroke="hsl(var(--chart-2))"
+                      strokeDasharray="6 6"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  )}
+                  {showForecast && (
+                    <Line
+                      type="monotone"
+                      dataKey="forecastRevenue"
+                      stroke="hsl(var(--chart-4))"
+                      strokeDasharray="2 4"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  )}
                 </LineChart>
               </ResponsiveContainer>
             </div>

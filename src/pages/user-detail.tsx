@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, CreditCard, DollarSign, User, Phone, Shield, TrendingUp, Activity } from 'lucide-react';
-import { formatCurrency, formatDate, formatTime } from '@/lib/utils';
+import { ArrowLeft, CreditCard, DollarSign, User, Phone, Shield, TrendingUp, Activity, Eye } from 'lucide-react';
+import { formatCurrency, formatDate, formatTime, getTransactionUserName, getTransactionPaymentMethod, getPaymentMethodBadge, getTransactionReferenceId } from '@/lib/utils';
 
 export default function UserDetailPage() {
   const { userId } = useParams<{ userId: string }>();
@@ -18,18 +18,44 @@ export default function UserDetailPage() {
     queryFn: () => dashboardApi.getUserTransactions(userId!),
   });
 
-  const { data: userActivity } = useQuery({
+  const { data: userActivity, refetch: refetchUserActivity, isFetching: isFetchingUserActivity } = useQuery({
     queryKey: ['user-activity'],
     queryFn: dashboardApi.getEnhancedUserActivity,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
+    refetchInterval: 30000,
   });
 
-  // Debug: Log available data
-  console.log('🔍 Debug: userId from URL:', userId);
-  console.log('🔍 Debug: userActivity data:', userActivity);
-  console.log('🔍 Debug: Available user IDs:', userActivity?.userActivity?.map(u => u.userId));
-  console.log('🔍 Debug: userTransactions data:', userTransactions);
-  console.log('🔍 Debug: userTransactions.transaksi:', userTransactions?.transaksi);
-  console.log('🔍 Debug: userTransactions.transaksi length:', userTransactions?.transaksi?.length);
+  // Helper functions for consistent formatting
+  const formatDisplayUsername = (rawUsername: string, rawUserId: string) => {
+    // If username is just "User" + phone number, format it nicely
+    if (rawUsername?.startsWith('User ') && rawUsername.includes('@s.whatsapp.net')) {
+      const phoneNumber = rawUsername.replace('User ', '').replace('@s.whatsapp.net', '');
+      return phoneNumber;
+    }
+    // If username is just phone number with @s.whatsapp.net, remove the suffix
+    if (rawUsername?.includes('@s.whatsapp.net')) {
+      return rawUsername.replace('@s.whatsapp.net', '');
+    }
+    // If username is just phone number, return as is
+    if (rawUsername && /^\d+$/.test(rawUsername)) {
+      return rawUsername;
+    }
+    // Default fallback
+    return rawUsername || 'Unknown User';
+  };
+
+  const formatDisplayUserId = (rawUserId: string) => {
+    // Always show full format with @s.whatsapp.net for consistency
+    if (rawUserId?.includes('@s.whatsapp.net')) {
+      return rawUserId;
+    }
+    // If it's just a phone number, append the suffix
+    if (rawUserId && /^\d+$/.test(rawUserId)) {
+      return `${rawUserId}@s.whatsapp.net`;
+    }
+    return rawUserId || 'Unknown ID';
+  };
 
   // Create a minimal user object from userTransactions if available
   const fallbackUser = userTransactions ? {
@@ -39,50 +65,36 @@ export default function UserDetailPage() {
     totalSpent: userTransactions.totalSpent || 0,
     lastActivity: null,
     role: 'bronze', // Default role
-    saldo: 0
+    saldo: (userTransactions as any)?.currentSaldo ?? 0
   } : null;
 
   // Find current user from user activity data with smart ID matching
   const currentUser = userActivity?.userActivity?.find(user => {
-    console.log(`🔍 Debug: Trying to match userId "${userId}" with user "${user.userId}"`);
-    
     // Try exact match first
     if (user.userId === userId) {
-      console.log(`✅ Exact match found: ${user.userId}`);
       return true;
     }
     
     // Try matching phone numbers (remove @s.whatsapp.net)
     const userPhoneNumber = user.userId?.replace('@s.whatsapp.net', '');
     if (userPhoneNumber === userId) {
-      console.log(`✅ Phone number match found: ${userPhoneNumber} === ${userId}`);
       return true;
     }
     
     // Try matching with @s.whatsapp.net appended
     const userIdWithWhatsApp = userId?.includes('@s.whatsapp.net') ? userId : `${userId}@s.whatsapp.net`;
     if (user.userId === userIdWithWhatsApp) {
-      console.log(`✅ WhatsApp format match found: ${user.userId} === ${userIdWithWhatsApp}`);
       return true;
     }
     
     // Try extracting just the phone number from user ID
     const extractedPhone = user.userId?.match(/\d+/)?.[0];
     if (extractedPhone === userId) {
-      console.log(`✅ Extracted phone match found: ${extractedPhone} === ${userId}`);
       return true;
     }
     
-    console.log(`❌ No match found for user ${user.userId}`);
     return false;
   });
-
-  // Debug: Log what we found
-  if (currentUser) {
-    console.log('🔍 Debug: Found currentUser from enhanced data:', currentUser);
-    console.log('🔍 Debug: Enhanced transactionCount:', currentUser.transactionCount);
-    console.log('🔍 Debug: Enhanced totalSpent:', currentUser.totalSpent);
-  }
 
   if (isLoading) {
     return (
@@ -113,14 +125,41 @@ export default function UserDetailPage() {
         </div>
       );
     }
-    
-    // Use fallback user data
-    console.log('🔍 Debug: Using fallback user data:', fallbackUser);
   }
 
   // Use currentUser or fallbackUser
   const displayUser = currentUser || fallbackUser;
   
+  // Format display values consistently
+  const formattedUsername = formatDisplayUsername(displayUser.username, displayUser.userId);
+  const formattedUserId = formatDisplayUserId(displayUser.userId);
+  
+  // Derive safe effective values
+  const effectiveBalance: number | null = (
+    (userTransactions as any)?.currentSaldo ??
+    (currentUser as any)?.saldo ??
+    (displayUser as any)?.saldo ??
+    null
+  );
+  const effectiveLastActivityIso: string | null = (() => {
+    const fromUser = (displayUser as any)?.lastActivity;
+    if (fromUser) {
+      // Kurangi 7 jam
+      const date = new Date(fromUser);
+      date.setHours(date.getHours() - 7);
+      return date.toISOString();
+    }
+    const dates = (userTransactions?.transaksi || [])
+      .map((t: any) => (t.date ? new Date(t.date).getTime() : NaN))
+      .filter((n) => !Number.isNaN(n));
+    if (dates.length === 0) return null;
+    const maxTs = Math.max(...dates);
+    // Kurangi 7 jam
+    const date = new Date(maxTs);
+    date.setHours(date.getHours() - 7);
+    return date.toISOString();
+  })();
+
   // Safety check - if no user data available, show error
   if (!displayUser) {
     return (
@@ -182,7 +221,7 @@ export default function UserDetailPage() {
         <div>
           <h1 className="text-2xl font-bold">User Details</h1>
           <p className="text-muted-foreground">
-            Comprehensive information about {displayUser.username}
+            Comprehensive information about {formattedUsername}
           </p>
         </div>
       </div>
@@ -193,19 +232,24 @@ export default function UserDetailPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                {displayUser.username?.charAt(0)?.toUpperCase() || 'U'}
+                {formattedUsername?.charAt(0)?.toUpperCase() || 'U'}
               </div>
               <div>
-                <CardTitle className="text-2xl font-bold">{displayUser.username}</CardTitle>
-                <CardDescription className="text-lg">User ID: {displayUser.userId}</CardDescription>
+                <CardTitle className="text-2xl font-bold">{formattedUsername}</CardTitle>
+                <CardDescription className="text-lg">User ID: {formattedUserId}</CardDescription>
               </div>
             </div>
-            <Badge 
-              variant={getRoleBadgeVariant(displayUser.role)}
-              className={`px-4 py-2 text-sm font-semibold ${getRoleColor(displayUser.role)}`}
-            >
-              {displayUser.role.toUpperCase()} MEMBER
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge 
+                variant={getRoleBadgeVariant(displayUser.role)}
+                className={`px-4 py-2 text-sm font-semibold ${getRoleColor(displayUser.role)}`}
+              >
+                {displayUser.role.toUpperCase()} MEMBER
+              </Badge>
+              {/* <Button variant="outline" size="sm" onClick={() => refetchUserActivity()} disabled={isFetchingUserActivity}>
+                {isFetchingUserActivity ? 'Refreshing…' : 'Refresh Balance'}
+              </Button> */}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -232,7 +276,7 @@ export default function UserDetailPage() {
               <div className="p-3 bg-cyan-100 dark:bg-cyan-900/30 rounded-full w-16 h-16 mx-auto mb-3 flex items-center justify-center">
                 <DollarSign className="h-8 w-8 text-cyan-600" />
               </div>
-              <p className="text-2xl font-bold text-foreground">{formatCurrency(displayUser.saldo || 0)}</p>
+              <p className="text-2xl font-bold text-foreground">{effectiveBalance != null ? formatCurrency(effectiveBalance) : '—'}</p>
               <p className="text-sm text-muted-foreground">Current Balance</p>
             </div>
             <div className="text-center p-4 bg-white/60 dark:bg-slate-800/60 rounded-xl border border-white/20 dark:border-slate-700/20">
@@ -240,7 +284,7 @@ export default function UserDetailPage() {
                 <Activity className="h-8 w-8 text-purple-600" />
               </div>
               <p className="text-lg font-bold text-foreground">
-                {new Date(displayUser.lastActivity).toLocaleDateString('id-ID')}
+                {effectiveLastActivityIso ? new Date(effectiveLastActivityIso).toLocaleDateString('id-ID') : '—'}
               </p>
               <p className="text-sm text-muted-foreground">Last Activity</p>
             </div>
@@ -264,7 +308,7 @@ export default function UserDetailPage() {
                 <Phone className="h-4 w-4 text-muted-foreground" />
                 <span className="font-medium">Phone Number</span>
               </div>
-              <span className="text-sm text-muted-foreground">{displayUser.userId}</span>
+              <span className="text-sm text-muted-foreground">{formattedUserId}</span>
             </div>
             <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
               <div className="flex items-center gap-3">
@@ -272,10 +316,7 @@ export default function UserDetailPage() {
                 <span className="font-medium">Member Since</span>
               </div>
               <span className="text-sm text-muted-foreground">
-                {new Date(displayUser.lastActivity).toLocaleDateString('id-ID', {
-                  year: 'numeric',
-                  month: 'long'
-                })}
+                {effectiveLastActivityIso ? new Date(effectiveLastActivityIso).toLocaleDateString('id-ID', { year: 'numeric', month: 'long' }) : '—'}
               </span>
             </div>
             <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
@@ -302,7 +343,7 @@ export default function UserDetailPage() {
             <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
               <span className="font-medium">Current Balance</span>
               <span className="text-sm font-semibold text-cyan-600">
-                {formatCurrency(displayUser.saldo || 0)}
+                {effectiveBalance != null ? formatCurrency(effectiveBalance) : '—'}
               </span>
             </div>
             <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
@@ -339,84 +380,74 @@ export default function UserDetailPage() {
           </CardDescription>
         </CardHeader>
         
-        {/* Debug Info
-        {process.env.NODE_ENV === 'development' && (
-          <div className="text-xs text-muted-foreground bg-yellow-50 p-2 rounded border">
-            <strong>Debug Info:</strong><br/>
-            userTransactions: {userTransactions ? 'Loaded' : 'Not loaded'}<br/>
-            transaksi array: {userTransactions?.transaksi ? `Array(${userTransactions.transaksi.length})` : 'undefined'}<br/>
-            Enhanced data: {currentUser ? `transactionCount: ${currentUser.transactionCount}, totalSpent: ${currentUser.totalSpent}` : 'none'}<br/>
-            First transaction: {userTransactions?.transaksi?.[0] ? JSON.stringify(userTransactions.transaksi[0], null, 2) : 'none'}
-          </div>
-        )} */}
-        
         <CardContent>
           {(userTransactions?.transaksi && userTransactions.transaksi.length > 0) || (currentUser?.transactionCount > 0) ? (
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Reference ID</TableHead>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Payment Method</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Date & Time</TableHead>
-                  <TableHead>Status</TableHead>
+                <TableRow className="border-slate-200 hover:bg-slate-50">
+                  <TableHead className="text-slate-600 font-medium">Reference ID</TableHead>
+                  <TableHead className="text-slate-600 font-medium">Product</TableHead>
+                  <TableHead className="text-slate-600 font-medium">Payment Method</TableHead>
+                  <TableHead className="text-slate-600 font-medium">Amount</TableHead>
+                  <TableHead className="text-slate-600 font-medium">Date</TableHead>
+                  <TableHead className="text-slate-600 font-medium">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {/* Show real transaction data from API if available */}
                 {userTransactions?.transaksi && userTransactions.transaksi.length > 0 ? (
                   userTransactions.transaksi.map((transaction, index) => (
-                    <TableRow key={`real-transaction-${index}`} className="hover:bg-slate-50">
+                    <TableRow key={`real-transaction-${index}`} className="hover:bg-slate-50 border-slate-100">
                       <TableCell>
-                        <button
-                          className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-700 border border-slate-200 hover:bg-slate-200 transition"
-                          onClick={() => {
-                            const refValue = transaction.referenceId || transaction.reffId || transaction.order_id || `REF-${userId}-${String(index + 1).padStart(3, '0')}`;
-                            navigate(`/ref/${encodeURIComponent(refValue)}`);
-                          }}
-                          title="Lihat detail reference ID"
-                        >
-                          {transaction.referenceId || transaction.reffId || transaction.order_id || `REF-${userId}-${String(index + 1).padStart(3, '0')}`}
-                        </button>
+                        <code className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-700 border border-slate-200">
+                          {getTransactionReferenceId(transaction)}
+                        </code>
                       </TableCell>
                       <TableCell>
                         <div>
                           <p className="font-medium text-slate-700">{transaction.name}</p>
-                          <p className="text-sm text-slate-500">
-                            Qty: {transaction.jumlah} • {formatCurrency(transaction.price)} each
-                          </p>
+                          <p className="text-sm text-slate-500">Qty: {transaction.jumlah} • {formatCurrency(transaction.price)} each</p>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">
-                          {transaction.payment_method || transaction.metodeBayar || 'Not specified'}
+                        <Badge variant={getPaymentMethodBadge(getTransactionPaymentMethod(transaction))}>
+                          {getTransactionPaymentMethod(transaction)}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <p className="font-medium text-slate-700">
-                          {formatCurrency(transaction.totalBayar)}
-                        </p>
+                        <p className="font-medium text-slate-700">{formatCurrency(transaction.totalBayar)}</p>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm">
-                          <p className="text-slate-700">{formatDate(transaction.date, 'short')}</p>
-                          <p className="text-muted-foreground">{formatTime(transaction.date)}</p>
+                        <div className="flex flex-col">
+                          <span className="text-sm text-slate-700 font-medium">
+                            {formatDate(
+                              (() => {
+                                const date = new Date(transaction.date);
+                                date.setHours(date.getHours() - 7);
+                                return date.toISOString();
+                              })(),
+                              'short'
+                            )}
+                          </span>
+                          <span className="text-xs text-slate-400">
+                            {formatTime(
+                              (() => {
+                                const date = new Date(transaction.date);
+                                date.setHours(date.getHours() - 7);
+                                return date.toISOString();
+                              })()
+                            )}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge 
-                          variant="default" 
-                          className={
-                            transaction.status === 'completed' 
-                              ? 'bg-green-100 text-green-700 border-green-200'
-                              : transaction.status === 'pending'
-                              ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
-                              : 'bg-red-100 text-red-700 border-red-200'
-                          }
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigate(`/ref/${encodeURIComponent(getTransactionReferenceId(transaction))}`)}
+                          className="text-slate-500 hover:text-slate-700 hover:bg-slate-100"
                         >
-                          {transaction.status || 'Completed'}
-                        </Badge>
+                          <Eye className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
@@ -432,15 +463,11 @@ export default function UserDetailPage() {
                       <TableCell>
                         <div>
                           <p className="font-medium text-slate-700">Enhanced Transaction {index + 1}</p>
-                          <p className="text-sm text-slate-500">
-                            Data from enhanced user activity
-                          </p>
+                          <p className="text-sm text-slate-500">Data from enhanced user activity</p>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">
-                          Enhanced Data
-                        </Badge>
+                        <Badge variant="outline">Enhanced Data</Badge>
                       </TableCell>
                       <TableCell>
                         <p className="font-medium text-slate-700">
@@ -448,10 +475,7 @@ export default function UserDetailPage() {
                         </p>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm">
-                          <p className="text-slate-700">Recent Activity</p>
-                          <p className="text-muted-foreground">From enhanced data</p>
-                        </div>
+                        <p className="text-sm text-slate-500">Recent Activity</p>
                       </TableCell>
                       <TableCell>
                         <Badge variant="default" className="bg-blue-100 text-blue-700 border-blue-200">

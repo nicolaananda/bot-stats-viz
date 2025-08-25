@@ -489,45 +489,49 @@ export const dashboardApi = {
       
       console.log('🔍 Debug: Recent transactions for users enhancement:', recentTransactionsResponse);
       
-      // Create a map of user transactions with multiple ID formats
-      const userTransactionMap = new Map<string, { count: number; totalSpent: number; lastTransaction: string | null }>();
+      // Helper: normalize an ID to canonical key (digits-only phone if present)
+      const toCanonicalId = (raw: any): string | null => {
+        if (!raw || typeof raw !== 'string') return null;
+        const trimmed = raw.replace('@s.whatsapp.net', '').trim();
+        const digits = (trimmed.match(/\d+/g) || []).join('');
+        if (digits.length > 0) return digits;
+        return trimmed || null;
+      };
+      
+      // Create a map of user transactions aggregated by canonical ID
+      const canonicalTransactionMap = new Map<string, { count: number; totalSpent: number; lastTransaction: string | null }>();
       
       if (recentTransactionsResponse.transactions) {
         console.log('🔍 Debug: Processing transactions for users...');
         recentTransactionsResponse.transactions.forEach((transaction: any, index: number) => {
-          // Try multiple possible user ID formats
-          const possibleUserIds = [
+          // Candidate fields that may contain a user identifier
+          const candidates = [
             transaction.user_id,
             transaction.user,
             transaction.user_name,
-            // Extract phone number from WhatsApp format
-            transaction.user_id?.replace('@s.whatsapp.net', ''),
-            transaction.user?.replace('@s.whatsapp.net', ''),
-            // Try with @s.whatsapp.net appended
-            transaction.user_id ? `${transaction.user_id}@s.whatsapp.net` : null,
-            transaction.user ? `${transaction.user}@s.whatsapp.net` : null,
           ].filter(Boolean);
           
-          if (index < 3) { // Log first 3 transactions for debugging
-            console.log(`🔍 Debug: Transaction ${index + 1} for users - possible user IDs:`, possibleUserIds);
+          // Determine canonical key from the first valid candidate
+          let canonical: string | null = null;
+          for (const c of candidates) {
+            canonical = toCanonicalId(c);
+            if (canonical) break;
           }
+          // Fallback: try order context
+          if (!canonical) canonical = toCanonicalId(transaction.user_id || transaction.user);
+          if (!canonical) canonical = 'unknown';
           
-                     // Map to all possible ID formats
-           possibleUserIds.forEach(userId => {
-             if (userId) {
-               const current = userTransactionMap.get(userId) || { count: 0, totalSpent: 0, lastTransaction: null };
-               userTransactionMap.set(userId, {
-                 count: current.count + 1,
-                 totalSpent: current.totalSpent + (transaction.totalBayar || transaction.price || 0),
-                 lastTransaction: transaction.date || current.lastTransaction,
-               });
-             }
-           });
+          const current = canonicalTransactionMap.get(canonical) || { count: 0, totalSpent: 0, lastTransaction: null };
+          canonicalTransactionMap.set(canonical, {
+            count: current.count + 1,
+            totalSpent: current.totalSpent + (transaction.totalBayar || transaction.price || 0),
+            lastTransaction: transaction.date || current.lastTransaction,
+          });
         });
       }
       
-      console.log('🔍 Debug: User transaction map for users (first 5 entries):', 
-        Array.from(userTransactionMap.entries()).slice(0, 5));
+      console.log('🔍 Debug: Canonical transaction map for users (first 5 entries):', 
+        Array.from(canonicalTransactionMap.entries()).slice(0, 5));
       
       // Enhance users data with transaction information
       if (usersResponse.users && Array.isArray(usersResponse.users)) {
@@ -538,50 +542,42 @@ export const dashboardApi = {
         })));
         
         const enhancedUsers = usersResponse.users.map((user: any) => {
-          // Try to find transaction data with different ID formats
-          const possibleMatchIds = [
+          // Build possible raw IDs from user object
+          const rawIds = [
             user.userId,
             user.user_id,
             user.user,
             user.username,
-            // Remove @s.whatsapp.net if present
-            user.userId?.replace('@s.whatsapp.net', ''),
-            user.user_id?.replace('@s.whatsapp.net', ''),
-            // Add @s.whatsapp.net if not present
-            user.userId && !user.userId.includes('@s.whatsapp.net') ? `${user.userId}@s.whatsapp.net` : null,
-            user.user_id && !user.user_id.includes('@s.whatsapp.net') ? `${user.user_id}@s.whatsapp.net` : null,
-            // Extract just the phone number
-            user.userId?.match(/\d+/)?.[0],
-            user.user_id?.match(/\d+/)?.[0],
           ].filter(Boolean);
           
-          let transactionInfo = { count: 0, totalSpent: 0, lastTransaction: null };
-          let matchedId = null;
+          // Compute canonical alternatives
+          const possibleCanonicalIds = Array.from(new Set(rawIds
+            .map((id: string) => toCanonicalId(id))
+            .filter(Boolean)));
           
-          for (const id of possibleMatchIds) {
-            const found = userTransactionMap.get(id);
+          // Find first match in canonical map
+          let aggregated = { count: 0, totalSpent: 0, lastTransaction: null } as { count: number; totalSpent: number; lastTransaction: string | null };
+          let matchedCanonical: string | null = null;
+          for (const cid of possibleCanonicalIds) {
+            const found = canonicalTransactionMap.get(cid!);
             if (found && found.count > 0) {
-              transactionInfo = found;
-              matchedId = id;
-              console.log(`🔍 Debug: Found transaction data for user ${user.userId || user.user_id} using ID ${id}:`, found);
+              aggregated = found;
+              matchedCanonical = cid!;
+              console.log(`🔍 Debug: Matched canonical ${cid} for user ${user.userId || user.user_id}`);
               break;
             }
           }
           
-          if (transactionInfo.count === 0) {
-            console.log(`🔍 Debug: No transaction data found for user ${user.userId || user.user_id}, tried IDs:`, possibleMatchIds);
-          }
-          
           return {
             ...user,
-            transactionCount: transactionInfo.count || user.transactionCount || 0,
-            totalSpent: transactionInfo.totalSpent || user.totalSpent || 0,
-            lastActivity: transactionInfo.lastTransaction || user.lastActivity || null,
-            _debugMatchedId: matchedId, // For debugging only
+            transactionCount: aggregated.count || user.transactionCount || 0,
+            totalSpent: aggregated.totalSpent || user.totalSpent || 0,
+            lastActivity: aggregated.lastTransaction || user.lastActivity || null,
+            _debugMatchedCanonical: matchedCanonical, // For debugging only
           };
         });
         
-        console.log('🔍 Debug: Enhanced users data:', enhancedUsers);
+        console.log('🔍 Debug: Enhanced users data (canonical):', enhancedUsers);
         
         return {
           ...usersResponse,
