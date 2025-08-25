@@ -19,4 +19,19 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    sourcemap: mode !== 'production' ? true : false,
+    chunkSizeWarningLimit: 700,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor libs
+          react: ["react", "react-dom", "react-router-dom"],
+          tanstack: ["@tanstack/react-query"],
+          recharts: ["recharts"],
+          lucide: ["lucide-react"],
+        },
+      },
+    },
+  },
 }));
