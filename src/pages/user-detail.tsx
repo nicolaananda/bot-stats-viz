@@ -369,9 +369,16 @@ export default function UserDetailPage() {
                   userTransactions.transaksi.map((transaction, index) => (
                     <TableRow key={`real-transaction-${index}`} className="hover:bg-slate-50">
                       <TableCell>
-                        <code className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-700 border border-slate-200">
+                        <button
+                          className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-700 border border-slate-200 hover:bg-slate-200 transition"
+                          onClick={() => {
+                            const refValue = transaction.referenceId || transaction.reffId || transaction.order_id || `REF-${userId}-${String(index + 1).padStart(3, '0')}`;
+                            navigate(`/ref/${encodeURIComponent(refValue)}`);
+                          }}
+                          title="Lihat detail reference ID"
+                        >
                           {transaction.referenceId || transaction.reffId || transaction.order_id || `REF-${userId}-${String(index + 1).padStart(3, '0')}`}
-                        </code>
+                        </button>
                       </TableCell>
                       <TableCell>
                         <div>

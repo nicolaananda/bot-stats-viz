@@ -12,7 +12,10 @@ import UsersPage from "./pages/users";
 import UserDetailPage from "./pages/user-detail";
 import TransactionsPage from "./pages/transactions";
 import ProductsPage from "./pages/products";
+import ProductsStockPage from "./pages/products-stock";
+import ProductDetailPage from "./pages/product-detail";
 import AnalyticsPage from "./pages/analytics";
+import RefDetailPage from "./pages/ref-detail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,6 +44,9 @@ const App = () => (
                   <Route path="/users" element={<UsersPage />} />
                   <Route path="/users/:userId" element={<UserDetailPage />} />
                   <Route path="/products" element={<ProductsPage />} />
+                  <Route path="/products/stock" element={<ProductsStockPage />} />
+                  <Route path="/products/:productId" element={<ProductDetailPage />} />
+                  <Route path="/ref/:reffId" element={<RefDetailPage />} />
                   <Route path="/transactions" element={<TransactionsPage />} />
                   <Route path="/analytics" element={<AnalyticsPage />} />
                 </Routes>

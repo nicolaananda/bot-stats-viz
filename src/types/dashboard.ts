@@ -152,6 +152,143 @@ export interface Product {
   transactionCount: number;
 }
 
+// New: Product Stock Management Types
+export interface ProductStockItemParsed {
+  email?: string;
+  password?: string;
+  profile?: string;
+  pin?: string;
+  notes?: string;
+}
+
+export interface ProductStockItem {
+  raw: string;
+  parsed?: ProductStockItemParsed;
+  isValid?: boolean;
+}
+
+export interface ProductStockEntry {
+  id: string;
+  name: string;
+  desc?: string;
+  priceB?: number;
+  priceS?: number;
+  priceG?: number;
+  terjual?: number;
+  stockCount: number;
+  stok?: string[];
+  stockStatus: 'out' | 'low' | 'medium' | 'good' | string;
+  category?: string;
+  minStock?: number;
+  lastRestock?: string;
+  utilization?: number;
+}
+
+export interface ProductStockResponse {
+  totalProducts: number;
+  totalSold: number;
+  products: ProductStockEntry[];
+  topProducts?: ProductStockEntry[];
+}
+
+export interface StockSummaryResponse {
+  totalProducts: number;
+  totalStockItems: number;
+  lowStockProducts: number;
+  outOfStockProducts: number;
+  categories: string[];
+  stockByCategory: Record<string, number>;
+}
+
+export interface StockAlertItem {
+  productId: string;
+  productName: string;
+  currentStock: number;
+  threshold: number;
+  status: 'out' | 'low' | 'medium' | 'good' | string;
+  category?: string;
+  lastRestock?: string;
+  urgency: 'critical' | 'high' | 'medium' | 'low' | string;
+}
+
+export interface StockAlertsResponse {
+  totalAlerts: number;
+  criticalAlerts: number;
+  highAlerts: number;
+  mediumAlerts: number;
+  alerts: StockAlertItem[];
+}
+
+export interface StockHistoryItem {
+  type: 'restock' | 'deduct' | string;
+  timestamp: string;
+  description?: string;
+  quantity: number;
+}
+
+export interface ProductStockHistoryResponse {
+  productId: string;
+  productName: string;
+  currentStock: number;
+  history: StockHistoryItem[];
+}
+
+export interface ProductStockDetailsResponse {
+  productId: string;
+  productName: string;
+  description?: string;
+  prices?: {
+    bronze?: number;
+    silver?: number;
+    gold?: number;
+  };
+  sales?: {
+    total?: number;
+  };
+  stock: {
+    count: number;
+    status: string;
+    items?: ProductStockItem[];
+    metrics?: Record<string, number>;
+  };
+  category?: string;
+  lastRestock?: string;
+  terms?: string;
+}
+
+export interface StockUpdateRequest {
+  action: 'add' | 'remove';
+  stockItems: string[];
+  notes?: string;
+}
+
+export interface StockUpdateResponse {
+  productId: string;
+  previousStockCount: number;
+  newStockCount: number;
+  addedItems: number;
+  removedItems: number;
+  updatedAt: string;
+  notes?: string;
+}
+
+export interface BulkStockUpdateItemResult {
+  productId: string;
+  success: boolean;
+  previousStockCount?: number;
+  newStockCount?: number;
+  action?: 'add' | 'remove';
+  itemsProcessed?: number;
+  error?: string;
+}
+
+export interface BulkStockUpdateResponse {
+  totalUpdates: number;
+  successfulUpdates: number;
+  failedUpdates: number;
+  results: BulkStockUpdateItemResult[];
+}
+
 export interface RecentTransactions {
   transactions: Transaction[];
   count: number;

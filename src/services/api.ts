@@ -11,7 +11,15 @@ import {
   ProductStats,
   RecentTransactions,
   ExportResponse,
-  ApiResponse
+  ApiResponse,
+  ProductStockResponse,
+  StockSummaryResponse,
+  StockAlertsResponse,
+  ProductStockHistoryResponse,
+  ProductStockDetailsResponse,
+  StockUpdateRequest,
+  StockUpdateResponse,
+  BulkStockUpdateResponse
 } from '@/types/dashboard';
 import { API_CONFIG, API_ENDPOINTS } from '@/config/api';
 import { validateArrayData, validateObjectData, safeGet } from '@/lib/api-utils';
@@ -219,6 +227,7 @@ export const dashboardApi = {
             console.warn('getUserTransactions: transaksi is not an array:', response.data.data.transaksi);
             return {
               user: tryUserId,
+              userId: tryUserId,
               transaksi: [],
               totalTransaksi: 0,
               totalSpent: 0
@@ -586,7 +595,67 @@ export const dashboardApi = {
       // Fallback to regular users data
       return this.getAllUsers(page, limit, search, role);
     }
-  }
+  },
+
+  // Product Stock Management
+  async getProductStock(): Promise<ProductStockResponse> {
+    const response = await api.get<ApiResponse<ProductStockResponse>>(API_ENDPOINTS.products.stock);
+    if (response.data.success && response.data.data) return response.data.data;
+    throw new Error(response.data.error || 'Failed to fetch product stock');
+  },
+
+  async getStockSummary(): Promise<StockSummaryResponse> {
+    const response = await api.get<ApiResponse<StockSummaryResponse>>(API_ENDPOINTS.products.stockSummary);
+    if (response.data.success && response.data.data) return response.data.data;
+    throw new Error(response.data.error || 'Failed to fetch stock summary');
+  },
+
+  async getStockAlerts(): Promise<StockAlertsResponse> {
+    const response = await api.get<ApiResponse<StockAlertsResponse>>(API_ENDPOINTS.products.stockAlerts);
+    if (response.data.success && response.data.data) return response.data.data;
+    throw new Error(response.data.error || 'Failed to fetch stock alerts');
+  },
+
+  async getProductStockHistory(productId: string): Promise<ProductStockHistoryResponse> {
+    const response = await api.get<ApiResponse<ProductStockHistoryResponse>>(API_ENDPOINTS.products.stockHistory(productId));
+    if (response.data.success && response.data.data) return response.data.data;
+    throw new Error(response.data.error || 'Failed to fetch product stock history');
+  },
+
+  async getProductStockDetails(productId: string): Promise<ProductStockDetailsResponse> {
+    const response = await api.get<ApiResponse<ProductStockDetailsResponse>>(API_ENDPOINTS.products.stockDetails(productId));
+    if (response.data.success && response.data.data) return response.data.data;
+    throw new Error(response.data.error || 'Failed to fetch product stock details');
+  },
+
+  async updateProductStock(productId: string, payload: StockUpdateRequest): Promise<StockUpdateResponse> {
+    const response = await api.put<ApiResponse<StockUpdateResponse>>(API_ENDPOINTS.products.updateStock(productId), payload);
+    if (response.data.success && response.data.data) return response.data.data;
+    throw new Error(response.data.error || 'Failed to update product stock');
+  },
+
+  async bulkUpdateStock(updates: StockUpdateRequest & { productId: string }[]): Promise<BulkStockUpdateResponse> {
+    const response = await api.post<ApiResponse<BulkStockUpdateResponse>>(API_ENDPOINTS.products.stock + '/bulk-update', { updates });
+    if (response.data.success && response.data.data) return response.data.data;
+    throw new Error(response.data.error || 'Failed to perform bulk stock update');
+  },
+
+  async getStockAnalytics() {
+    const response = await api.get<ApiResponse<any>>(API_ENDPOINTS.products.stockAnalytics);
+    if (response.data.success && response.data.data) return response.data.data;
+    throw new Error(response.data.error || 'Failed to fetch stock analytics');
+  },
+
+  async getStockReport() {
+    const response = await api.get<ApiResponse<any>>(API_ENDPOINTS.products.stockReport);
+    if (response.data.success && response.data.data) return response.data.data;
+    throw new Error(response.data.error || 'Failed to generate stock report');
+  },
+
+  async exportStockCSV(): Promise<Blob> {
+    const response = await api.get(API_ENDPOINTS.products.stockExport, { responseType: 'blob' });
+    return response.data as Blob;
+  },
 };
 
 export default api;

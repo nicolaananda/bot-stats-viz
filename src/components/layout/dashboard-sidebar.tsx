@@ -8,7 +8,8 @@ import {
   Home,
   Search,
   Download,
-  TrendingUp
+  TrendingUp,
+  Package
 } from "lucide-react";
 import {
   Sidebar,
@@ -28,6 +29,7 @@ const navigationItems = [
   { title: "Charts", url: "/charts", icon: BarChart3 },
   { title: "Users", url: "/users", icon: Users },
   { title: "Products", url: "/products", icon: ShoppingBag },
+  { title: "Manajemen Produk", url: "/products/stock", icon: Package },
   { title: "Transactions", url: "/transactions", icon: CreditCard },
   { title: "Analytics", url: "/analytics", icon: TrendingUp },
 ];
@@ -46,6 +48,10 @@ export function DashboardSidebar() {
   const isActive = (path: string) => {
     if (path === "/") {
       return currentPath === "/";
+    }
+    // Ensure '/products' only highlights on exact match, not for nested routes like '/products/stock'
+    if (path === "/products") {
+      return currentPath === "/products";
     }
     return currentPath.startsWith(path);
   };

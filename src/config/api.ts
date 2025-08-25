@@ -22,6 +22,15 @@ export const API_ENDPOINTS = {
   },
   products: {
     stats: '/api/dashboard/products/stats',
+    stock: '/api/dashboard/products/stock',
+    stockSummary: '/api/dashboard/products/stock/summary',
+    stockAlerts: '/api/dashboard/products/stock/alerts',
+    stockAnalytics: '/api/dashboard/products/stock/analytics',
+    stockReport: '/api/dashboard/products/stock/report',
+    stockExport: '/api/dashboard/products/stock/export',
+    updateStock: (productId: string) => `/api/dashboard/products/${productId}/stock`,
+    stockHistory: (productId: string) => `/api/dashboard/products/${productId}/stock/history`,
+    stockDetails: (productId: string) => `/api/dashboard/products/${productId}/stock/details`,
   },
   export: (format: string) => `/api/dashboard/export/${format}`,
 } as const; 
