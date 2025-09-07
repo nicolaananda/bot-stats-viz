@@ -33,11 +33,32 @@ export default function UsersPage() {
 	});
 
 	const { data: allUsers, isLoading: allUsersLoading, error: allUsersError } = useQuery({
-		queryKey: ['all-users', currentPage, searchTerm, roleFilter, sortField, sortDirection],
-		queryFn: () => dashboardApi.getEnhancedAllUsers(currentPage, usersPerPage, searchTerm, roleFilter),
+		queryKey: ['all-users', searchTerm, roleFilter, sortField, sortDirection],
+		queryFn: () => dashboardApi.getEnhancedAllUsers(1, 1000, searchTerm, roleFilter), // Get all users with high limit
 		retry: 1,
 		retryDelay: 1000,
 	});
+
+	// Debug effect for user data
+	useEffect(() => {
+		if (allUsers) {
+			console.log('🔍 Users Page Debug: Enhanced users data received:', allUsers);
+			const usersData = (allUsers as any)?.users;
+			if (usersData) {
+				console.log('🔍 Users Page Debug: First 3 users transaction data:', 
+					usersData.slice(0, 3).map((u: any) => ({
+						userId: u.userId,
+						username: u.username,
+						transactionCount: u.transactionCount,
+						totalSpent: u.totalSpent,
+						hasTransactions: u.hasTransactions,
+						_debugMatchedId: u._debugMatchedId,
+						_debugNormalizedIds: u._debugNormalizedIds
+					}))
+				);
+			}
+		}
+	}, [allUsers]);
 
 	const { data: userStats, isLoading: userStatsLoading, error: userStatsError } = useQuery({
 		queryKey: ['user-stats'],
@@ -59,109 +80,40 @@ export default function UsersPage() {
 		}
 	};
 
-	// Use allUsers data instead of filtering userActivity
+	// Show all users without pagination, but filter out users with 0 transactions
 	const users = allUsers?.users || [];
-	const pagination = allUsers?.pagination || { currentPage: 1, totalPages: 1, totalUsers: 0, usersPerPage: 10 };
+	const isLoading = allUsersLoading;
+	
+	// Filter out users with 0 transactions
+	const currentUsers = users.filter(user => (user.transactionCount || 0) > 0);
 
-	// Update current page when pagination changes
-	useEffect(() => {
-		if (pagination.currentPage !== currentPage) {
-			setCurrentPage(pagination.currentPage);
-		}
-	}, [pagination.currentPage, currentPage]);
+	// No pagination needed - showing all users
 
-	const isLoading = allUsersLoading || userStatsLoading;
+	// No pagination handlers needed
 
-	// Sort and filter users
-	const sortedAndFilteredUsers = users
-		.filter((user) => {
-			const matchesSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-								   user.userId.toLowerCase().includes(searchTerm.toLowerCase());
-			const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-			return matchesSearch && matchesRole;
-		})
-		.sort((a, b) => {
-			let aValue: any, bValue: any;
-			
-			switch (sortField) {
-				case 'transactions':
-					aValue = a.transactionCount || 0;
-					bValue = b.transactionCount || 0;
-					break;
-				case 'totalSpent':
-					aValue = a.totalSpent || 0;
-					bValue = b.totalSpent || 0;
-					break;
-				case 'lastActivity':
-					aValue = a.lastActivity ? new Date(a.lastActivity).getTime() : 0;
-					bValue = b.lastActivity ? new Date(b.lastActivity).getTime() : 0;
-					break;
-				default:
-					return 0;
-			}
-			
-			if (sortDirection === 'asc') {
-				return aValue - bValue;
-			} else {
-				return bValue - aValue;
-			}
-		});
-
-	// Use sorted and filtered users
-	const filteredUsers = sortedAndFilteredUsers;
-
-	// Pagination logic
-	const totalPages = pagination.totalPages;
-	const startIndex = (currentPage - 1) * usersPerPage;
-	const endIndex = startIndex + usersPerPage;
-	const currentUsers = filteredUsers.slice(startIndex, endIndex);
-
-	// Generate page numbers for pagination
-	const getPageNumbers = () => {
-		const pages = [] as (number | string)[];
-		const maxVisiblePages = 5;
-		
-		if (totalPages <= maxVisiblePages) {
-			for (let i = 1; i <= totalPages; i++) {
-				pages.push(i);
-			}
-		} else {
-			if (currentPage <= 3) {
-				for (let i = 1; i <= 4; i++) {
-					pages.push(i);
-				}
-				pages.push('...');
-				pages.push(totalPages);
-			} else if (currentPage >= totalPages - 2) {
-				pages.push(1);
-				pages.push('...');
-				for (let i = totalPages - 3; i <= totalPages; i++) {
-					pages.push(i);
-				}
-			} else {
-				pages.push(1);
-				pages.push('...');
-				for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-					pages.push(i);
-				}
-				pages.push('...');
-				pages.push(totalPages);
-			}
-		}
-		
-		return pages;
+	const handleSearch = (value: string) => {
+		setSearchTerm(value);
+		setCurrentPage(1); // Reset to first page when searching
 	};
 
-	const handlePageChange = (page: number) => {
-		if (page >= 1 && page <= totalPages) {
-			setCurrentPage(page);
-		}
+	const handleRoleFilter = (role: string) => {
+		setRoleFilter(role);
+		setCurrentPage(1); // Reset to first page when filtering
+	};
+
+	const handleUserClick = (userId: string) => {
+		// Normalize user ID by removing @s.whatsapp.net suffix for clean URLs
+		const normalizedUserId = userId.replace('@s.whatsapp.net', '').trim();
+		console.log('🔍 User Click Debug: Original userId:', userId, 'Normalized:', normalizedUserId);
+		navigate(`/users/${normalizedUserId}`);
 	};
 
 	const exportCurrentViewToCSV = () => {
 		const header = ['Username', 'User ID', 'Role', 'Transactions', 'Total Spent', 'Last Activity'];
 		const rows = currentUsers.map((u) => [
-			u.username,
+			u.username === 'User .net' || u.username === 'User @lid' || !u.username 
+				? u.userId.replace('@s.whatsapp.net', '').replace('@lid', '')
+				: u.username,
 			u.userId,
 			u.role,
 			u.transactionCount || 0,
@@ -277,12 +229,12 @@ export default function UsersPage() {
 									<Input
 										placeholder="Search by username or user ID..."
 										value={searchTerm}
-										onChange={(e) => setSearchTerm(e.target.value)}
+										onChange={(e) => handleSearch(e.target.value)}
 										className="pl-10"
 									/>
 								</div>
 							</div>
-							<Select value={roleFilter} onValueChange={setRoleFilter}>
+							<Select value={roleFilter} onValueChange={handleRoleFilter}>
 								<SelectTrigger className="w-48">
 									<SelectValue placeholder="Filter by role" />
 								</SelectTrigger>
@@ -304,13 +256,7 @@ export default function UsersPage() {
 							<div>
 								<CardTitle>All Users</CardTitle>
 								<CardDescription>
-									Showing {currentUsers.length} of {filteredUsers.length} users (Page {currentPage} of {totalPages})
-									{sortField !== 'transactions' || sortDirection !== 'desc' ? (
-										<span className="ml-2 text-xs text-muted-foreground">
-											• Sorted by {sortField === 'transactions' ? 'Transactions' : sortField === 'totalSpent' ? 'Total Spent' : 'Last Activity'} 
-											({sortDirection === 'asc' ? 'Low to High' : 'High to Low'})
-										</span>
-									) : null}
+									Showing all {currentUsers.length} users
 								</CardDescription>
 							</div>
 							<div className="flex items-center gap-2">
@@ -426,8 +372,14 @@ export default function UsersPage() {
 										<TableRow key={user.userId} className="hover:bg-accent/50">
 											<TableCell className={compact ? 'py-2' : ''}>
 												<div>
-													<p className="font-medium">{user.username}</p>
-													<p className="text-sm text-muted-foreground">{user.userId}</p>
+													<p className="font-medium">
+														{user.username === 'User .net' || user.username === 'User @lid' || !user.username 
+															? user.userId.replace('@s.whatsapp.net', '').replace('@lid', '')
+															: user.username}
+													</p>
+													<p className="text-sm text-muted-foreground">
+														{user.userId.includes('@') ? user.userId : `ID: ${user.userId}`}
+													</p>
 												</div>
 											</TableCell>
 											<TableCell className={compact ? 'py-2' : ''}>
@@ -456,11 +408,7 @@ export default function UsersPage() {
 												<Button
 													variant="ghost"
 													size="sm"
-													onClick={() => {
-														// Extract phone number from userId for URL (remove @s.whatsapp.net)
-														const phoneNumber = user.userId?.replace('@s.whatsapp.net', '') || user.userId;
-														navigate(`/users/${phoneNumber}`);
-													}}
+													onClick={() => handleUserClick(user.userId)}
 													className="flex items-center gap-2"
 												>
 													<Eye className="h-4 w-4" />
@@ -473,64 +421,14 @@ export default function UsersPage() {
 							</Table>
 						</div>
 						
-						{/* Pagination */}
-						{totalPages > 1 && (
-							<div className="flex items-center justify-between mt-6">
-								<div className="text-sm text-muted-foreground">
-									Showing {startIndex + 1} to {Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} users
-								</div>
-								<div className="flex items-center gap-2">
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={() => handlePageChange(1)}
-										disabled={currentPage === 1}
-									>
-										<ChevronsLeft className="h-4 w-4" />
-									</Button>
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={() => handlePageChange(currentPage - 1)}
-										disabled={currentPage === 1}
-									>
-										<ChevronLeft className="h-4 w-4" />
-									</Button>
-									
-									{getPageNumbers().map((page, index) => (
-										<Button
-											key={index}
-											variant={page === currentPage ? 'default' : 'outline'}
-											size="sm"
-											onClick={() => typeof page === 'number' && handlePageChange(page)}
-											disabled={page === '...'}
-											className={page === '...' ? 'cursor-default' : ''}
-										>
-											{page}
-										</Button>
-									))}
-									
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={() => handlePageChange(currentPage + 1)}
-										disabled={currentPage === totalPages}
-									>
-										<ChevronRight className="h-4 w-4" />
-									</Button>
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={() => handlePageChange(totalPages)}
-										disabled={currentPage === totalPages}
-									>
-										<ChevronsRight className="h-4 w-4" />
-									</Button>
-								</div>
+						{/* Total users info */}
+						<div className="flex items-center justify-between mt-6">
+							<div className="text-sm text-muted-foreground">
+								Total: {currentUsers.length} users
 							</div>
-						)}
+						</div>
 						
-						{filteredUsers.length === 0 && (
+						{users.length === 0 && (
 							<div className="text-center py-12">
 								<Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
 								<p className="text-lg font-medium">No users found</p>

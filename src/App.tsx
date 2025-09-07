@@ -16,6 +16,13 @@ import ProductsStockPage from "./pages/products-stock";
 import ProductDetailPage from "./pages/product-detail";
 import AnalyticsPage from "./pages/analytics";
 import RefDetailPage from "./pages/ref-detail";
+// Advanced Analytics Pages
+import AdvancedAnalyticsPage from "./pages/advanced-analytics";
+import ProductPerformancePage from "./pages/product-performance";
+import UserBehaviorPage from "./pages/user-behavior";
+import FinancialAnalyticsPage from "./pages/financial-analytics";
+import RealtimeDashboardPage from "./pages/realtime-dashboard";
+import PredictiveAnalyticsPage from "./pages/predictive-analytics";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,6 +56,13 @@ const App = () => (
                   <Route path="/ref/:reffId" element={<RefDetailPage />} />
                   <Route path="/transactions" element={<TransactionsPage />} />
                   <Route path="/analytics" element={<AnalyticsPage />} />
+                  {/* Advanced Analytics Routes */}
+                  <Route path="/analytics/advanced" element={<AdvancedAnalyticsPage />} />
+                  <Route path="/analytics/products" element={<ProductPerformancePage />} />
+                  <Route path="/analytics/users" element={<UserBehaviorPage />} />
+                  <Route path="/analytics/financial" element={<FinancialAnalyticsPage />} />
+                  <Route path="/analytics/realtime" element={<RealtimeDashboardPage />} />
+                  <Route path="/analytics/predictive" element={<PredictiveAnalyticsPage />} />
                 </Routes>
               </main>
             </div>

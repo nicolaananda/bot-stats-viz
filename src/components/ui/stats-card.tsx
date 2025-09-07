@@ -9,7 +9,7 @@ interface StatsCardProps {
   changeType?: 'positive' | 'negative' | 'neutral';
   icon?: LucideIcon;
   className?: string;
-  trend?: number[];
+  trend?: { value: number; isPositive: boolean };
 }
 
 export function StatsCard({

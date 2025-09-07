@@ -130,6 +130,15 @@ export default function UserDetailPage() {
   // Use currentUser or fallbackUser
   const displayUser = currentUser || fallbackUser;
   
+  // Debug logging for transaction data
+  console.log('🔍 User Detail Debug: URL userId:', userId);
+  console.log('🔍 User Detail Debug: userTransactions data:', userTransactions);
+  console.log('🔍 User Detail Debug: userTransactions?.transaksi?.length:', userTransactions?.transaksi?.length);
+  console.log('🔍 User Detail Debug: userTransactions?.totalTransaksi:', userTransactions?.totalTransaksi);
+  console.log('🔍 User Detail Debug: userTransactions?.totalSpent:', userTransactions?.totalSpent);
+  console.log('🔍 User Detail Debug: displayUser.transactionCount:', displayUser?.transactionCount);
+  console.log('🔍 User Detail Debug: displayUser.totalSpent:', displayUser?.totalSpent);
+  
   // Format display values consistently
   const formattedUsername = formatDisplayUsername(displayUser.username, displayUser.userId);
   const formattedUserId = formatDisplayUserId(displayUser.userId);
@@ -259,7 +268,7 @@ export default function UserDetailPage() {
                 <CreditCard className="h-8 w-8 text-blue-600" />
               </div>
               <p className="text-2xl font-bold text-foreground">
-                {userTransactions?.transaksi?.length || displayUser.transactionCount || 0}
+                {userTransactions?.totalTransaksi || userTransactions?.transaksi?.length || displayUser.transactionCount || 0}
               </p>
               <p className="text-sm text-muted-foreground">Total Transactions</p>
             </div>

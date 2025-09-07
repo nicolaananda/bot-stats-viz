@@ -1,5 +1,5 @@
 export const API_CONFIG = {
-  baseURL: import.meta.env.VITE_API_URL || 'http://185.201.9.64:3002',
+  baseURL: import.meta.env.VITE_API_URL || 'https://api-botwa.nicola.id',
   timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || '10000'),
   enableLogging: import.meta.env.VITE_API_LOGGING === 'true',
 } as const;
@@ -9,19 +9,27 @@ export const API_ENDPOINTS = {
     overview: '/api/dashboard/overview',
     dailyChart: '/api/dashboard/chart/daily',
     monthlyChart: '/api/dashboard/chart/monthly',
+    realtime: '/api/dashboard/realtime',
+    predictions: '/api/dashboard/predictions',
   },
   users: {
     activity: '/api/dashboard/users/activity',
     all: '/api/dashboard/users/all',
     stats: '/api/dashboard/users/stats',
+    behavior: '/api/dashboard/users/behavior',
     transactions: (userId: string) => `/api/dashboard/users/${userId}/transactions`,
   },
   transactions: {
     search: (reffId: string) => `/api/dashboard/transactions/search/${reffId}`,
     recent: (limit?: number) => `/api/dashboard/transactions/recent${limit ? `?limit=${limit}` : ''}`,
   },
+  analytics: {
+    advanced: '/api/dashboard/analytics/advanced',
+    finance: '/api/dashboard/finance/analytics',
+  },
   products: {
     stats: '/api/dashboard/products/stats',
+    performance: '/api/dashboard/products/performance',
     stock: '/api/dashboard/products/stock',
     stockSummary: '/api/dashboard/products/stock/summary',
     stockAlerts: '/api/dashboard/products/stock/alerts',
@@ -31,6 +39,7 @@ export const API_ENDPOINTS = {
     updateStock: (productId: string) => `/api/dashboard/products/${productId}/stock`,
     stockHistory: (productId: string) => `/api/dashboard/products/${productId}/stock/history`,
     stockDetails: (productId: string) => `/api/dashboard/products/${productId}/stock/details`,
+    bulkStockUpdate: '/api/dashboard/products/stock/bulk-update',
   },
   export: (format: string) => `/api/dashboard/export/${format}`,
 } as const; 

@@ -9,7 +9,13 @@ import {
   Search,
   Download,
   TrendingUp,
-  Package
+  Package,
+  Brain,
+  PieChart,
+  DollarSign,
+  Activity,
+  Target,
+  UserCheck
 } from "lucide-react";
 import {
   Sidebar,
@@ -32,6 +38,15 @@ const navigationItems = [
   { title: "Manajemen Produk", url: "/products/stock", icon: Package },
   { title: "Transactions", url: "/transactions", icon: CreditCard },
   { title: "Analytics", url: "/analytics", icon: TrendingUp },
+];
+
+const advancedAnalyticsItems = [
+  { title: "Advanced Analytics", url: "/analytics/advanced", icon: Brain },
+  { title: "Product Performance", url: "/analytics/products", icon: Target },
+  { title: "User Behavior", url: "/analytics/users", icon: UserCheck },
+  { title: "Financial Analytics", url: "/analytics/financial", icon: DollarSign },
+  { title: "Real-time Dashboard", url: "/analytics/realtime", icon: Activity },
+  { title: "Predictive Analytics", url: "/analytics/predictive", icon: PieChart },
 ];
 
 const toolItems = [
@@ -90,6 +105,28 @@ export function DashboardSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={item.url}
+                      className={getNavClasses(item.url)}
+                    >
+                      <item.icon className="mr-3 h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Advanced Analytics */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Advanced Analytics</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {advancedAnalyticsItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink

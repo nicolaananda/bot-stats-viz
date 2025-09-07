@@ -5,7 +5,18 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
+// Updated Dashboard Overview to match advanced API
 export interface DashboardOverview {
+  totalUsers: number;
+  totalTransactions: number;
+  totalRevenue: number;
+  totalProfit: number;
+  activeUsers: number;
+  avgLTV?: number;
+}
+
+// Legacy interface for backward compatibility
+export interface LegacyDashboardOverview {
   totalTransaksi: number;
   totalPendapatan: number;
   transaksiHariIni: number;
@@ -28,6 +39,231 @@ export interface DashboardOverview {
       pendapatan: number;
     }>;
     userActivity: any[];
+  };
+}
+
+// Advanced Analytics Types
+export interface AdvancedAnalytics {
+  overview: {
+    totalUsers: number;
+    totalTransactions: number;
+    totalRevenue: number;
+    totalProfit: number;
+    avgLTV: number;
+  };
+  distributions: {
+    roles: {
+      bronze: number;
+      silver: number;
+      gold: number;
+    };
+    paymentMethods: {
+      [key: string]: number;
+    };
+  };
+  trends: {
+    monthly: Array<{
+      month: string;
+      revenue: number;
+      transactions: number;
+      profit: number;
+    }>;
+    hourlyActivity: Array<{
+      hour: number;
+      activity: number;
+    }>;
+  };
+  topProducts: Array<{
+    id: string;
+    name: string;
+    revenue: number;
+    sold: number;
+  }>;
+  userMetrics: {
+    totalCustomers: number;
+    averageOrderValue: number;
+    repeatCustomers: number;
+  };
+}
+
+// Product Performance Analytics
+export interface ProductPerformance {
+  products: Array<{
+    id: string;
+    name: string;
+    category: string;
+    prices: {
+      bronze: number;
+      silver: number;
+      gold: number;
+    };
+    stock: {
+      current: number;
+      status: string;
+    };
+    sales: {
+      totalSold: number;
+      totalRevenue: number;
+      totalProfit: number;
+      avgOrderValue: number;
+    };
+    metrics: {
+      conversionRate: number;
+      profitMargin: number;
+      stockTurnover: number;
+    };
+  }>;
+  summary: {
+    totalProducts: number;
+    totalRevenue: number;
+    totalProfit: number;
+    avgProfitMargin: number;
+  };
+  insights: {
+    topByRevenue: any[];
+    topByProfit: any[];
+    topByConversion: any[];
+    lowStock: any[];
+  };
+}
+
+// User Behavior Analytics
+export interface UserBehaviorAnalytics {
+  segments: {
+    new: any[];
+    regular: any[];
+    loyal: any[];
+    vip: any[];
+  };
+  segmentStats: {
+    [key: string]: {
+      count: number;
+      totalSpent: number;
+      avgSpent: number;
+      avgTransactions: number;
+      percentage: number;
+    };
+  };
+  churnAnalysis: {
+    churnedUsers: number;
+    churnRate: number;
+    recentlyActive: number;
+  };
+  insights: {
+    paymentPreferences: any;
+    mostActiveHour: any;
+    topSpenders: any[];
+    mostFrequentBuyers: any[];
+  };
+}
+
+// Financial Analytics
+export interface FinancialAnalytics {
+  overview: {
+    totalRevenue: number;
+    totalProfit: number;
+    profitMargin: number;
+    avgOrderValue: number;
+    totalTransactions: number;
+    revenueGrowthRate: number;
+  };
+  distributions: {
+    byPaymentMethod: any;
+    byUserRole: any;
+    profitByRole: any;
+  };
+  trends: {
+    daily: any[];
+    monthly: any;
+  };
+  userFinances: {
+    totalBalance: number;
+    avgBalance: number;
+    balanceDistribution: any;
+  };
+  insights: {
+    healthScore: number;
+    recommendations: string[];
+  };
+}
+
+// Real-time Dashboard Data
+export interface RealtimeDashboard {
+  timestamp: string;
+  today: {
+    transactions: number;
+    revenue: number;
+    avgOrderValue: number;
+    topProducts: any[];
+  };
+  last24h: {
+    transactions: number;
+    revenue: number;
+  };
+  realtime: {
+    activeUsers: number;
+    totalUsers: number;
+    conversionRate: number;
+    hourlyData: any[];
+  };
+  recent: {
+    transactions: any[];
+  };
+  alerts: any[];
+}
+
+// Predictive Analytics
+export interface PredictiveAnalytics {
+  revenue: {
+    historical: any[];
+    predicted: {
+      nextMonth: number;
+      confidence: string;
+    };
+  };
+  users: {
+    historical: any[];
+    predicted: {
+      nextMonthNewUsers: number;
+      totalPredicted: number;
+    };
+  };
+  inventory: {
+    stockPredictions: any[];
+    totalRecommendedStock: number;
+  };
+  churnRisk: {
+    highRisk: number;
+    mediumRisk: number;
+    usersAtRisk: any[];
+  };
+  trends: {
+    categories: any;
+    insights: any[];
+  };
+  recommendations: string[];
+}
+
+// Stock Analytics
+export interface StockAnalytics {
+  overview: {
+    totalProducts: number;
+    totalStockValue: number;
+    lowStockItems: number;
+    outOfStockItems: number;
+  };
+  performance: {
+    topPerformers: any[];
+    slowMovers: any[];
+    stockTurnover: any[];
+  };
+  predictions: {
+    restockNeeded: any[];
+    demandForecast: any[];
+  };
+  insights: {
+    recommendations: string[];
+    trends: any[];
   };
 }
 
@@ -280,6 +516,15 @@ export interface BulkStockUpdateItemResult {
   action?: 'add' | 'remove';
   itemsProcessed?: number;
   error?: string;
+}
+
+export interface BulkStockUpdateRequest {
+  updates: Array<{
+    productId: string;
+    action: 'add' | 'remove';
+    stockItems: string[];
+    notes?: string;
+  }>;
 }
 
 export interface BulkStockUpdateResponse {
