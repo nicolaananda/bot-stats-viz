@@ -545,3 +545,128 @@ export interface ExportResponse {
   message: string;
   filename: string;
 }
+
+// Stock Management Types
+export interface StockItem {
+  email: string;
+  password: string;
+  profile?: string;
+  pin?: string;
+  notes?: string;
+}
+
+export interface StockItemResponse {
+  raw: string;
+  index: number;
+  email: string;
+  password: string;
+  profile?: string;
+  pin?: string;
+  notes?: string;
+}
+
+export interface AddStockRequest {
+  stockItems: (string | StockItem)[];
+  notes?: string;
+}
+
+export interface AddStockResponse {
+  productId: string;
+  productName: string;
+  previousStockCount: number;
+  newStockCount: number;
+  addedItems: number;
+  invalidItems: number;
+  updatedAt: string;
+  notes?: string;
+  addedStockItems: string[];
+}
+
+export interface EditStockRequest {
+  stockItem: StockItem;
+  notes?: string;
+}
+
+export interface EditStockResponse {
+  productId: string;
+  productName: string;
+  stockIndex: number;
+  oldStockItem: string;
+  newStockItem: string;
+  updatedAt: string;
+  notes?: string;
+}
+
+export interface DeleteStockRequest {
+  notes?: string;
+}
+
+export interface DeleteMultipleStockRequest {
+  deleteType: 'indexes' | 'first' | 'last' | 'all';
+  stockIndexes?: number[];
+  notes?: string;
+}
+
+export interface DeleteStockResponse {
+  productId: string;
+  productName: string;
+  deletedIndex?: number;
+  deletedItem?: string;
+  deleteType?: string;
+  originalStockCount: number;
+  newStockCount: number;
+  deletedItemsCount?: number;
+  deletedItems?: Array<{ index: number; item: string }>;
+  updatedAt: string;
+  notes?: string;
+}
+
+export interface GetStockItemResponse {
+  productId: string;
+  productName: string;
+  stockIndex: number;
+  totalStockCount: number;
+  stockItem: StockItemResponse;
+}
+
+export interface ReplaceAllStockRequest {
+  stockItems: (string | StockItem)[];
+  notes?: string;
+}
+
+export interface ReplaceAllStockResponse {
+  productId: string;
+  productName: string;
+  originalStockCount: number;
+  newStockCount: number;
+  validItems: number;
+  invalidItems: number;
+  updatedAt: string;
+  notes?: string;
+}
+
+export interface BulkOperationRequest {
+  operations: Array<{
+    productId: string;
+    action: 'add' | 'delete' | 'clear';
+    data?: any;
+    notes?: string;
+  }>;
+}
+
+export interface BulkOperationResponse {
+  totalOperations: number;
+  successfulOperations: number;
+  failedOperations: number;
+  results: Array<{
+    productId: string;
+    action: string;
+    success: boolean;
+    originalStockCount: number;
+    newStockCount: number;
+    addedItems?: number;
+    deletedItems?: number;
+    clearedItems?: number;
+    notes?: string;
+  }>;
+}

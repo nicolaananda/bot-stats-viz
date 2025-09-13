@@ -40,6 +40,14 @@ export const API_ENDPOINTS = {
     stockHistory: (productId: string) => `/api/dashboard/products/${productId}/stock/history`,
     stockDetails: (productId: string) => `/api/dashboard/products/${productId}/stock/details`,
     bulkStockUpdate: '/api/dashboard/products/stock/bulk-update',
+    // Stock CRUD Operations
+    addStock: (productId: string) => `/api/dashboard/products/${productId}/stock/add`,
+    editStock: (productId: string, stockIndex: number) => `/api/dashboard/products/${productId}/stock/${stockIndex}`,
+    deleteStock: (productId: string, stockIndex: number) => `/api/dashboard/products/${productId}/stock/${stockIndex}`,
+    deleteMultipleStock: (productId: string) => `/api/dashboard/products/${productId}/stock`,
+    getStockItem: (productId: string, stockIndex: number) => `/api/dashboard/products/${productId}/stock/${stockIndex}`,
+    replaceAllStock: (productId: string) => `/api/dashboard/products/${productId}/stock/replace-all`,
+    bulkOperations: '/api/dashboard/products/stock/bulk-operations',
   },
   export: (format: string) => `/api/dashboard/export/${format}`,
 } as const; 

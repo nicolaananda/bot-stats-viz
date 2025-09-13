@@ -28,7 +28,22 @@ import {
   FinancialAnalytics,
   RealtimeDashboard,
   PredictiveAnalytics,
-  StockAnalytics
+  StockAnalytics,
+  // Stock Management Types
+  StockItem,
+  StockItemResponse,
+  AddStockRequest,
+  AddStockResponse,
+  EditStockRequest,
+  EditStockResponse,
+  DeleteStockRequest,
+  DeleteMultipleStockRequest,
+  DeleteStockResponse,
+  GetStockItemResponse,
+  ReplaceAllStockRequest,
+  ReplaceAllStockResponse,
+  BulkOperationRequest,
+  BulkOperationResponse
 } from '@/types/dashboard';
 import { API_CONFIG, API_ENDPOINTS } from '@/config/api';
 import { validateArrayData, validateObjectData, safeGet } from '@/lib/api-utils';
@@ -878,6 +893,49 @@ export const dashboardApi = {
     const response = await api.post<ApiResponse<BulkStockUpdateResponse>>(API_ENDPOINTS.products.bulkStockUpdate, payload);
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.error || 'Failed to perform bulk stock update');
+  },
+
+  // Stock Management CRUD Operations
+  async addStock(productId: string, payload: AddStockRequest): Promise<AddStockResponse> {
+    const response = await api.post<ApiResponse<AddStockResponse>>(API_ENDPOINTS.products.addStock(productId), payload);
+    if (response.data.success && response.data.data) return response.data.data;
+    throw new Error(response.data.message || response.data.error || 'Failed to add stock');
+  },
+
+  async editStock(productId: string, stockIndex: number, payload: EditStockRequest): Promise<EditStockResponse> {
+    const response = await api.put<ApiResponse<EditStockResponse>>(API_ENDPOINTS.products.editStock(productId, stockIndex), payload);
+    if (response.data.success && response.data.data) return response.data.data;
+    throw new Error(response.data.message || response.data.error || 'Failed to edit stock');
+  },
+
+  async deleteStock(productId: string, stockIndex: number, payload: DeleteStockRequest = {}): Promise<DeleteStockResponse> {
+    const response = await api.delete<ApiResponse<DeleteStockResponse>>(API_ENDPOINTS.products.deleteStock(productId, stockIndex), { data: payload });
+    if (response.data.success && response.data.data) return response.data.data;
+    throw new Error(response.data.message || response.data.error || 'Failed to delete stock');
+  },
+
+  async deleteMultipleStock(productId: string, payload: DeleteMultipleStockRequest): Promise<DeleteStockResponse> {
+    const response = await api.delete<ApiResponse<DeleteStockResponse>>(API_ENDPOINTS.products.deleteMultipleStock(productId), { data: payload });
+    if (response.data.success && response.data.data) return response.data.data;
+    throw new Error(response.data.message || response.data.error || 'Failed to delete multiple stock');
+  },
+
+  async getStockItem(productId: string, stockIndex: number): Promise<GetStockItemResponse> {
+    const response = await api.get<ApiResponse<GetStockItemResponse>>(API_ENDPOINTS.products.getStockItem(productId, stockIndex));
+    if (response.data.success && response.data.data) return response.data.data;
+    throw new Error(response.data.message || response.data.error || 'Failed to get stock item');
+  },
+
+  async replaceAllStock(productId: string, payload: ReplaceAllStockRequest): Promise<ReplaceAllStockResponse> {
+    const response = await api.put<ApiResponse<ReplaceAllStockResponse>>(API_ENDPOINTS.products.replaceAllStock(productId), payload);
+    if (response.data.success && response.data.data) return response.data.data;
+    throw new Error(response.data.message || response.data.error || 'Failed to replace all stock');
+  },
+
+  async bulkStockOperations(payload: BulkOperationRequest): Promise<BulkOperationResponse> {
+    const response = await api.post<ApiResponse<BulkOperationResponse>>(API_ENDPOINTS.products.bulkOperations, payload);
+    if (response.data.success && response.data.data) return response.data.data;
+    throw new Error(response.data.message || response.data.error || 'Failed to perform bulk operations');
   },
 };
 
