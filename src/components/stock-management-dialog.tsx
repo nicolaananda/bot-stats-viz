@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Plus, Trash2 } from 'lucide-react';
-import { StockItem } from '@/types/dashboard';
+import React, { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, Trash2 } from "lucide-react";
+import { StockItem } from "@/types/dashboard";
 
 interface StockManagementDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  mode: 'add' | 'edit';
+  mode: "add" | "edit";
   title: string;
   initialData?: StockItem;
   onSubmit: (data: { stockItems?: StockItem[]; stockItem?: StockItem; notes?: string }) => Promise<void>;
@@ -27,21 +27,21 @@ export function StockManagementDialog({
   isLoading = false,
 }: StockManagementDialogProps) {
   const [stockItems, setStockItems] = useState<StockItem[]>([
-    { email: '', password: '', profile: '', pin: '', notes: '' }
+    { email: "", password: "", profile: "", pin: "", notes: "" }
   ]);
-  const [globalNotes, setGlobalNotes] = useState('');
+  const [globalNotes, setGlobalNotes] = useState("");
 
   useEffect(() => {
-    if (mode === 'edit' && initialData) {
+    if (mode === "edit" && initialData) {
       setStockItems([initialData]);
-    } else if (mode === 'add') {
-      setStockItems([{ email: '', password: '', profile: '', pin: '', notes: '' }]);
+    } else if (mode === "add") {
+      setStockItems([{ email: "", password: "", profile: "", pin: "", notes: "" }]);
     }
-    setGlobalNotes('');
+    setGlobalNotes("");
   }, [mode, initialData, open]);
 
   const addStockItem = () => {
-    setStockItems([...stockItems, { email: '', password: '', profile: '', pin: '', notes: '' }]);
+    setStockItems([...stockItems, { email: "", password: "", profile: "", pin: "", notes: "" }]);
   };
 
   const removeStockItem = (index: number) => {
@@ -51,36 +51,24 @@ export function StockManagementDialog({
   };
 
   const updateStockItem = (index: number, field: keyof StockItem, value: string) => {
-    const updated = [...stockItems];
-    updated[index] = { ...updated[index], [field]: value };
-    setStockItems(updated);
+    const updatedItems = stockItems.map((item, i) => 
+      i === index ? { ...item, [field]: value } : item
+    );
+    setStockItems(updatedItems);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate required fields
-    const validItems = stockItems.filter(item => item.email.trim() && item.password.trim());
-    if (validItems.length === 0) {
-      alert('At least one stock item with email and password is required');
-      return;
-    }
-
     try {
-      if (mode === 'add') {
-        await onSubmit({ 
-          stockItems: validItems,
-          notes: globalNotes.trim() || undefined
-        });
+      if (mode === "add") {
+        await onSubmit({ stockItems, notes: globalNotes });
       } else {
-        await onSubmit({ 
-          stockItem: validItems[0],
-          notes: globalNotes.trim() || undefined
-        });
+        await onSubmit({ stockItem: stockItems[0], notes: globalNotes });
       }
       onOpenChange(false);
     } catch (error) {
-      console.error('Failed to submit stock data:', error);
+      console.error("Failed to submit stock data:", error);
     }
   };
 
@@ -90,21 +78,21 @@ export function StockManagementDialog({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
-            {mode === 'add' 
-              ? 'Add new stock items to this product. Email and password are required fields.'
-              : 'Edit the stock item details. Email and password are required fields.'
+            {mode === "add" 
+              ? "Add new stock items to this product. Email and password are required fields."
+              : "Edit the stock item details. Email and password are required fields."
             }
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
           {stockItems.map((item, index) => (
             <div key={index} className="space-y-3 p-4 border rounded-lg">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">
                   Stock Item {index + 1}
                 </Label>
-                {mode === 'add' && stockItems.length > 1 && (
+                {mode === "add" && stockItems.length > 1 && (
                   <Button
                     type="button"
                     variant="ghost"
@@ -124,9 +112,12 @@ export function StockManagementDialog({
                     id={`email-${index}`}
                     type="email"
                     value={item.email}
-                    onChange={(e) => updateStockItem(index, 'email', e.target.value)}
+                    onChange={(e) => updateStockItem(index, "email", e.target.value)}
                     placeholder="user@example.com"
                     required
+                    autoComplete="off"
+                    data-form-type="other"
+                    data-lpignore="true"
                   />
                 </div>
                 <div>
@@ -135,9 +126,12 @@ export function StockManagementDialog({
                     id={`password-${index}`}
                     type="text"
                     value={item.password}
-                    onChange={(e) => updateStockItem(index, 'password', e.target.value)}
+                    onChange={(e) => updateStockItem(index, "password", e.target.value)}
                     placeholder="password123"
                     required
+                    autoComplete="off"
+                    data-form-type="other"
+                    data-lpignore="true"
                   />
                 </div>
               </div>
@@ -147,35 +141,45 @@ export function StockManagementDialog({
                   <Label htmlFor={`profile-${index}`}>Profile</Label>
                   <Input
                     id={`profile-${index}`}
-                    value={item.profile || ''}
-                    onChange={(e) => updateStockItem(index, 'profile', e.target.value)}
+                    value={item.profile || ""}
+                    onChange={(e) => updateStockItem(index, "profile", e.target.value)}
                     placeholder="profile1"
+                    autoComplete="off"
+                    data-form-type="other"
+                    data-lpignore="true"
                   />
                 </div>
                 <div>
                   <Label htmlFor={`pin-${index}`}>PIN</Label>
                   <Input
                     id={`pin-${index}`}
-                    value={item.pin || ''}
-                    onChange={(e) => updateStockItem(index, 'pin', e.target.value)}
+                    value={item.pin || ""}
+                    onChange={(e) => updateStockItem(index, "pin", e.target.value)}
                     placeholder="1234"
+                    autoComplete="off"
+                    data-form-type="other"
+                    data-lpignore="true"
                   />
                 </div>
               </div>
 
               <div>
-                <Label htmlFor={`notes-${index}`}>Item Notes</Label>
-                <Input
+                <Label htmlFor={`notes-${index}`}>Notes</Label>
+                <Textarea
                   id={`notes-${index}`}
-                  value={item.notes || ''}
-                  onChange={(e) => updateStockItem(index, 'notes', e.target.value)}
-                  placeholder="Optional notes for this item"
+                  value={item.notes || ""}
+                  onChange={(e) => updateStockItem(index, "notes", e.target.value)}
+                  placeholder="Optional notes for this stock item"
+                  rows={2}
+                  autoComplete="off"
+                  data-form-type="other"
+                  data-lpignore="true"
                 />
               </div>
             </div>
           ))}
 
-          {mode === 'add' && (
+          {mode === "add" && (
             <Button
               type="button"
               variant="outline"
@@ -188,13 +192,16 @@ export function StockManagementDialog({
           )}
 
           <div>
-            <Label htmlFor="global-notes">Operation Notes</Label>
+            <Label htmlFor="global-notes">Global Notes</Label>
             <Textarea
               id="global-notes"
               value={globalNotes}
               onChange={(e) => setGlobalNotes(e.target.value)}
-              placeholder="Optional notes for this operation"
-              rows={3}
+              placeholder="Notes for this operation"
+              rows={2}
+              autoComplete="off"
+              data-form-type="other"
+              data-lpignore="true"
             />
           </div>
 
@@ -208,11 +215,11 @@ export function StockManagementDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Processing...' : (mode === 'add' ? 'Add Stock' : 'Update Stock')}
+              {isLoading ? "Processing..." : mode === "add" ? "Add Stock" : "Update Stock"}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
   );
-} 
+}

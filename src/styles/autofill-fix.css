@@ -1,0 +1,27 @@
+/* Prevent browser autofill overlay conflicts */
+input[data-form-type="other"] {
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
+  -webkit-text-fill-color: #000 !important;
+  background-color: transparent !important;
+}
+
+input[data-form-type="other"]:-webkit-autofill,
+input[data-form-type="other"]:-webkit-autofill:hover,
+input[data-form-type="other"]:-webkit-autofill:focus,
+input[data-form-type="other"]:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
+  -webkit-text-fill-color: #000 !important;
+  background-color: transparent !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Prevent autofill overlay from interfering with React DOM */
+.autofill-overlay-container {
+  display: none !important;
+}
+
+/* Additional protection for form elements */
+form[autocomplete="off"] input {
+  background-image: none !important;
+  background-color: transparent !important;
+}

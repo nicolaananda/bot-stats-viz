@@ -21,8 +21,8 @@ import AdvancedAnalyticsPage from "./pages/advanced-analytics";
 import ProductPerformancePage from "./pages/product-performance";
 import UserBehaviorPage from "./pages/user-behavior";
 import FinancialAnalyticsPage from "./pages/financial-analytics";
-import RealtimeDashboardPage from "./pages/realtime-dashboard";
-import PredictiveAnalyticsPage from "./pages/predictive-analytics";
+import SalesAnalyticsPage from "./pages/sales-analytics";
+import InventoryAnalyticsPage from "./pages/inventory-analytics";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,7 +38,12 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
         <SidebarProvider>
           <div className="min-h-screen flex w-full bg-gradient-secondary">
             <DashboardSidebar />
@@ -50,19 +55,19 @@ const App = () => (
                   <Route path="/charts" element={<Charts />} />
                   <Route path="/users" element={<UsersPage />} />
                   <Route path="/users/:userId" element={<UserDetailPage />} />
+                  <Route path="/transactions" element={<TransactionsPage />} />
                   <Route path="/products" element={<ProductsPage />} />
                   <Route path="/products/stock" element={<ProductsStockPage />} />
                   <Route path="/products/:productId" element={<ProductDetailPage />} />
-                  <Route path="/ref/:reffId" element={<RefDetailPage />} />
-                  <Route path="/transactions" element={<TransactionsPage />} />
                   <Route path="/analytics" element={<AnalyticsPage />} />
+                  <Route path="/ref/:refId" element={<RefDetailPage />} />
                   {/* Advanced Analytics Routes */}
-                  <Route path="/analytics/advanced" element={<AdvancedAnalyticsPage />} />
-                  <Route path="/analytics/products" element={<ProductPerformancePage />} />
-                  <Route path="/analytics/users" element={<UserBehaviorPage />} />
-                  <Route path="/analytics/financial" element={<FinancialAnalyticsPage />} />
-                  <Route path="/analytics/realtime" element={<RealtimeDashboardPage />} />
-                  <Route path="/analytics/predictive" element={<PredictiveAnalyticsPage />} />
+                  <Route path="/advanced-analytics" element={<AdvancedAnalyticsPage />} />
+                  <Route path="/product-performance" element={<ProductPerformancePage />} />
+                  <Route path="/user-behavior" element={<UserBehaviorPage />} />
+                  <Route path="/financial-analytics" element={<FinancialAnalyticsPage />} />
+                  <Route path="/sales-analytics" element={<SalesAnalyticsPage />} />
+                  <Route path="/inventory-analytics" element={<InventoryAnalyticsPage />} />
                 </Routes>
               </main>
             </div>

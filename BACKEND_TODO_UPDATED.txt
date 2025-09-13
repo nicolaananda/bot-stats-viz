@@ -1,0 +1,291 @@
+BACKEND IMPLEMENTATION GUIDE - UPDATED
+==========================================
+
+TIM BACKEND - YANG PERLU DIIMPLEMENTASIKAN:
+
+1. ADD STOCK
+   POST /api/dashboard/products/{productId}/stock/add
+   
+   Request Body:
+   {
+     "stockItems": [
+       "email@example.com|password123|profile1|1234",
+       {
+         "email": "user@domain.com",
+         "password": "pass123",
+         "profile": "profile2",
+         "pin": "5678",
+         "notes": "optional notes"
+       }
+     ],
+     "notes": "Restock batch #1"
+   }
+   
+   Response:
+   {
+     "success": true,
+     "data": {
+       "productId": "net1m",
+       "productName": "NETFLIX 1 MINGGU 1P1U BEST SELLER🔥",
+       "previousStockCount": 10,
+       "newStockCount": 12,
+       "addedItems": 2,
+       "invalidItems": 0,
+       "updatedAt": "2025-09-13T10:30:00.000Z",
+       "notes": "Restock batch #1",
+       "addedStockItems": [
+         "email@example.com|password123|profile1|1234",
+         "user@domain.com|pass123|profile2|5678|optional notes"
+       ]
+     },
+     "message": "Successfully added 2 stock items"
+   }
+
+2. GET STOCK ITEM
+   GET /api/dashboard/products/{productId}/stock/item/{stockIndex}
+   
+   Response:
+   {
+     "success": true,
+     "data": {
+       "productId": "net1m",
+       "productName": "NETFLIX 1 MINGGU 1P1U BEST SELLER🔥",
+       "stockIndex": 0,
+       "totalStockCount": 10,
+       "stockItem": {
+         "raw": "user@example.com|password123|profile1|1234|notes",
+         "index": 0,
+         "email": "user@example.com",
+         "password": "password123",
+         "profile": "profile1",
+         "pin": "1234",
+         "notes": "notes"
+       }
+     }
+   }
+
+3. EDIT STOCK ITEM
+   PUT /api/dashboard/products/{productId}/stock/item/{stockIndex}
+   
+   Request Body:
+   {
+     "stockItem": {
+       "email": "newemail@example.com",
+       "password": "newpass123",
+       "profile": "newprofile",
+       "pin": "9999",
+       "notes": "updated notes"
+     },
+     "notes": "Updated credentials"
+   }
+   
+   Response:
+   {
+     "success": true,
+     "data": {
+       "productId": "net1m",
+       "productName": "NETFLIX 1 MINGGU 1P1U BEST SELLER🔥",
+       "stockIndex": 0,
+       "oldStockItem": "oldemail@example.com|oldpass|oldprofile|1234",
+       "newStockItem": "newemail@example.com|newpass123|newprofile|9999|updated notes",
+       "updatedAt": "2025-09-13T10:35:00.000Z",
+       "notes": "Updated credentials"
+     },
+     "message": "Successfully updated stock item at index 0"
+   }
+
+4. DELETE STOCK ITEM
+   DELETE /api/dashboard/products/{productId}/stock/item/{stockIndex}
+   
+   Request Body:
+   {
+     "notes": "Removing expired account"
+   }
+   
+   Response:
+   {
+     "success": true,
+     "data": {
+       "productId": "net1m",
+       "productName": "NETFLIX 1 MINGGU 1P1U BEST SELLER🔥",
+       "deletedIndex": 0,
+       "deletedItem": "expired@example.com|oldpass|profile|1234",
+       "originalStockCount": 10,
+       "newStockCount": 9,
+       "updatedAt": "2025-09-13T10:45:00.000Z",
+       "notes": "Removing expired account"
+     },
+     "message": "Successfully deleted stock item"
+   }
+
+5. DELETE MULTIPLE STOCK
+   DELETE /api/dashboard/products/{productId}/stock
+   
+   Request Body:
+   {
+     "deleteType": "indexes",
+     "stockIndexes": [0, 2, 4],
+     "notes": "Removing invalid accounts"
+   }
+   
+   Delete Types:
+   - "indexes": Hapus berdasarkan index array (requires stockIndexes)
+   - "first": Hapus 1 item pertama
+   - "last": Hapus 1 item terakhir
+   - "all": Hapus semua stock
+   
+   Response:
+   {
+     "success": true,
+     "data": {
+       "productId": "net1m",
+       "productName": "NETFLIX 1 MINGGU 1P1U BEST SELLER🔥",
+       "deleteType": "indexes",
+       "originalStockCount": 10,
+       "newStockCount": 7,
+       "deletedItemsCount": 3,
+       "deletedItems": [
+         {"index": 0, "item": "email1@example.com|pass1|profile1|1234"},
+         {"index": 2, "item": "email2@example.com|pass2|profile2|5678"},
+         {"index": 4, "item": "email3@example.com|pass3|profile3|9999"}
+       ],
+       "updatedAt": "2025-09-13T10:40:00.000Z",
+       "notes": "Removing invalid accounts"
+     },
+     "message": "Successfully deleted 3 stock items"
+   }
+
+FRONTEND IMPLEMENTATION EXAMPLES:
+================================
+
+// ❌ SALAH - Tidak ada body data
+fetch("/api/dashboard/products/net1m/stock/item/0", {
+  method: "PUT",
+  headers: {
+    "Content-Type": "application/json"
+  }
+  // Missing body!
+});
+
+// ✅ BENAR - Dengan body data
+fetch("/api/dashboard/products/net1m/stock/item/0", {
+  method: "PUT",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    stockItem: {
+      email: "new@email.com",
+      password: "newpass",
+      profile: "3",
+      pin: "1234",
+      notes: "updated notes"
+    },
+    notes: "Updated via frontend"
+  })
+});
+
+// ✅ BENAR - Add Stock
+fetch("/api/dashboard/products/net1m/stock/add", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    stockItems: [
+      "test@example.com|testpass|profile1|1234",
+      {
+        email: "user@domain.com",
+        password: "pass123",
+        profile: "profile2",
+        pin: "5678",
+        notes: "optional notes"
+      }
+    ],
+    notes: "Added via frontend"
+  })
+});
+
+// ✅ BENAR - Delete Stock
+fetch("/api/dashboard/products/net1m/stock/item/0", {
+  method: "DELETE",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    notes: "Deleted via frontend"
+  })
+});
+
+ERROR HANDLING:
+==============
+
+404 - Product Not Found:
+{
+  "success": false,
+  "message": "Product not found"
+}
+
+400 - Invalid Request:
+{
+  "success": false,
+  "message": "Invalid request body"
+}
+
+500 - Server Error:
+{
+  "success": false,
+  "message": "Internal server error"
+}
+
+VALIDATION RULES:
+================
+- Email dan password wajib diisi
+- Format string: "email|password|profile|pin|notes"
+- Minimal 2 bagian (email|password)
+- Profile, pin, dan notes bersifat opsional
+- Index dimulai dari 0
+- Setelah delete, index stock items akan bergeser
+
+TESTING COMMANDS:
+================
+
+# Test Add Stock
+curl -X POST https://api-botwa.nicola.id/api/dashboard/products/net1m/stock/add \
+  -H "Content-Type: application/json" \
+  -d "{\"stockItems\":[\"test@example.com|testpass|profile1|1234\"],\"notes\":\"Test add\"}"
+
+# Test Get Stock Item
+curl -X GET https://api-botwa.nicola.id/api/dashboard/products/net1m/stock/item/0
+
+# Test Edit Stock Item
+curl -X PUT https://api-botwa.nicola.id/api/dashboard/products/net1m/stock/item/0 \
+  -H "Content-Type: application/json" \
+  -d "{\"stockItem\":{\"email\":\"updated@example.com\",\"password\":\"newpass\",\"profile\":\"profile1\",\"pin\":\"5678\",\"notes\":\"updated notes\"},\"notes\":\"Test edit\"}"
+
+# Test Delete Stock Item
+curl -X DELETE https://api-botwa.nicola.id/api/dashboard/products/net1m/stock/item/0 \
+  -H "Content-Type: application/json" \
+  -d "{\"notes\":\"Test delete\"}"
+
+# Test Bulk Delete
+curl -X DELETE https://api-botwa.nicola.id/api/dashboard/products/net1m/stock \
+  -H "Content-Type: application/json" \
+  -d "{\"deleteType\":\"first\",\"notes\":\"Test bulk delete\"}"
+
+IMPLEMENTATION NOTES:
+====================
+1. Endpoint GET /products/{productId}/stock/details sudah ada dan berfungsi
+2. Yang perlu ditambahkan adalah 5 endpoint di atas
+3. Format response harus konsisten dengan contoh
+4. CORS harus diaktifkan untuk frontend (localhost:8081)
+5. Timestamp menggunakan ISO 8601 format
+6. Index stock dimulai dari 0 dan berurutan
+7. Setelah delete, index stock items akan bergeser
+8. Validasi input yang ketat untuk email dan password
+9. Error handling yang proper untuk semua edge cases
+10. PASTIKAN semua PUT/DELETE requests memiliki body data!
+
+PRIORITY: HIGH
+DEADLINE: ASAP
+FRONTEND: READY - TINGGAL BACKEND IMPLEMENTASI
