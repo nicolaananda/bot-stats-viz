@@ -1,14 +1,24 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { TrendingUp, Users, CreditCard, DollarSign, Activity } from 'lucide-react';
+import { TrendingUp, Users, CreditCard, DollarSign, Activity, Eye, FileText, User, Smartphone, Copy, Check, Download } from 'lucide-react';
 import { StatsCard } from '@/components/ui/stats-card';
 import { OverviewChart } from '@/components/charts/overview-chart';
 import { EnvironmentBanner } from '@/components/ui/environment-banner';
 import { dashboardApi } from '@/services/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate, formatTime, getTransactionUserName, getTransactionPaymentMethod, getTransactionReferenceId } from '@/lib/utils';
 
 export default function DashboardOverview() {
+  const [selectedDetail, setSelectedDetail] = useState<any>(null);
+  const [receiptContent, setReceiptContent] = useState<string | null>(null);
+  const [isLoadingReceipt, setIsLoadingReceipt] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+  const { toast } = useToast();
+
   const { data: overview, isLoading, error } = useQuery({
     queryKey: ['dashboard-overview'],
     queryFn: dashboardApi.getOverview,
@@ -23,6 +33,102 @@ export default function DashboardOverview() {
     queryKey: ['recent-transactions'],
     queryFn: () => dashboardApi.getRecentTransactions(5),
   });
+
+  // Fetch transaction with receipt content
+  const fetchTransactionWithReceipt = async (reffId: string) => {
+    setIsLoadingReceipt(true);
+    try {
+      const transaction = await dashboardApi.searchTransaction(reffId);
+      
+      // Update transaction details
+      setSelectedDetail(transaction);
+      
+      // Set receipt content if available (now included in transaction response)
+      if (transaction.receiptExists && transaction.receiptContent) {
+        setReceiptContent(transaction.receiptContent);
+      } else {
+        setReceiptContent('Receipt not available - This transaction may not have generated a receipt yet.');
+      }
+    } catch (error) {
+      console.error('Failed to fetch transaction with receipt:', error);
+      if (error.response?.status === 404) {
+        setReceiptContent('Transaction not found');
+        toast({
+          title: "Transaction Error",
+          description: "Transaction not found",
+          variant: "destructive",
+        });
+      } else {
+        setReceiptContent('Failed to load transaction data - Please check your connection and try again.');
+        toast({
+          title: "Connection Error",
+          description: "Could not load transaction data",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsLoadingReceipt(false);
+    }
+  };
+
+  // Copy receipt content to clipboard
+  const copyReceiptContent = async () => {
+    if (!receiptContent) return;
+    
+    try {
+      await navigator.clipboard.writeText(receiptContent);
+      setIsCopied(true);
+      toast({
+        title: "Copied to Clipboard",
+        description: "Account information has been copied to clipboard",
+      });
+      
+      // Reset copied state after 2 seconds
+      setTimeout(() => {
+        setIsCopied(false);
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      toast({
+        title: "Copy Failed",
+        description: "Could not copy to clipboard. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Download receipt function
+  const downloadReceipt = async (reffId: string) => {
+    try {
+      const blob = await dashboardApi.downloadReceipt(reffId);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${reffId}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Download Successful",
+        description: `Receipt ${reffId}.txt has been downloaded`,
+      });
+    } catch (error) {
+      console.error('Failed to download receipt:', error);
+      toast({
+        title: "Download Failed",
+        description: "Could not download receipt file",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Reset detail view
+  const resetDetailView = () => {
+    setSelectedDetail(null);
+    setReceiptContent(null);
+  };
 
   if (isLoading) {
     return (
@@ -247,9 +353,116 @@ export default function DashboardOverview() {
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-lg text-foreground">{formatCurrency(transaction.totalBayar)}</p>
-                    <p className="text-xs text-muted-foreground">{formatDate(transaction.date, 'short')} • {formatTime(transaction.date)}</p>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className="font-bold text-lg text-foreground">{formatCurrency(transaction.totalBayar)}</p>
+                      <p className="text-xs text-muted-foreground">{formatDate(transaction.date, 'short')} • {formatTime(transaction.date)}</p>
+                    </div>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => fetchTransactionWithReceipt(getTransactionReferenceId(transaction))}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-muted-foreground hover:text-foreground"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent 
+                        className="max-w-2xl backdrop-blur-sm bg-white/95 dark:bg-slate-900/95 border-0 shadow-2xl" 
+                        onOpenChange={(open) => !open && resetDetailView()}
+                        style={{
+                          backdropFilter: 'blur(8px)',
+                          WebkitBackdropFilter: 'blur(8px)',
+                        }}
+                      >
+                        <DialogHeader>
+                          <DialogTitle className="flex items-center gap-2">
+                            <FileText className="h-5 w-5 text-blue-600" />
+                            Account Details
+                          </DialogTitle>
+                          <DialogDescription>
+                            Account information for transaction {getTransactionReferenceId(transaction)}
+                          </DialogDescription>
+                        </DialogHeader>
+                        
+                        {isLoadingReceipt ? (
+                          <div className="flex items-center justify-center py-8">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
+                            <p className="text-slate-600">Loading account details...</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {/* Receipt Content - Simple Display */}
+                            {selectedDetail?.receiptExists && receiptContent && (
+                              <div className="bg-slate-50 rounded-lg p-4 border">
+                                <div className="flex items-center justify-between mb-3">
+                                  <h4 className="font-medium text-slate-700 flex items-center gap-2">
+                                    <Smartphone className="h-4 w-4 text-blue-600" />
+                                    Account Information
+                                  </h4>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={copyReceiptContent}
+                                    className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                                  >
+                                    {isCopied ? (
+                                      <>
+                                        <Check className="h-4 w-4 mr-1" />
+                                        Copied!
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Copy className="h-4 w-4 mr-1" />
+                                        Copy
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
+                                <div className="bg-white rounded border p-3 max-h-60 overflow-y-auto">
+                                  <pre className="text-sm text-slate-600 whitespace-pre-wrap font-mono leading-relaxed">
+                                    {receiptContent}
+                                  </pre>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Simple Transaction Info */}
+                            {selectedDetail && (
+                              <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <span className="text-slate-500">Product:</span>
+                                  <p className="font-medium">{selectedDetail.produk || selectedDetail.name}</p>
+                                </div>
+                                <div>
+                                  <span className="text-slate-500">User:</span>
+                                  <p className="font-medium">{selectedDetail.user || selectedDetail.user_name}</p>
+                                </div>
+                                <div>
+                                  <span className="text-slate-500">Payment:</span>
+                                  <p className="font-medium">{selectedDetail.metodeBayar || selectedDetail.payment_method}</p>
+                                </div>
+                                <div>
+                                  <span className="text-slate-500">Amount:</span>
+                                  <p className="font-medium">{formatCurrency(selectedDetail.totalBayar)}</p>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* No Receipt Message */}
+                            {selectedDetail && !selectedDetail.receiptExists && (
+                              <div className="bg-amber-50 rounded-lg p-4 border border-amber-200 text-center">
+                                <FileText className="h-8 w-8 text-amber-600 mx-auto mb-2" />
+                                <p className="text-amber-700 font-medium">No Receipt Available</p>
+                                <p className="text-sm text-amber-600">This transaction doesn't have account details</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </div>
               ))}

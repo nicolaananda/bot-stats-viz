@@ -316,6 +316,15 @@ export const dashboardApi = {
     throw new Error(response.data.error || 'Failed to search transaction');
   },
 
+  // Get transaction with receipt (recommended endpoint)
+  async getTransactionWithReceipt(reffId: string): Promise<any> {
+    const response = await api.get<ApiResponse<any>>(API_ENDPOINTS.transactions.withReceipt(reffId));
+    if (response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    throw new Error(response.data.error || 'Failed to fetch transaction with receipt');
+  },
+
   async getRecentTransactions(limit: number = 20): Promise<RecentTransactions> {
     const response = await api.get<ApiResponse<RecentTransactions>>(API_ENDPOINTS.transactions.recent(limit));
     if (response.data.success && response.data.data) {
@@ -936,6 +945,30 @@ export const dashboardApi = {
     const response = await api.post<ApiResponse<BulkOperationResponse>>(API_ENDPOINTS.products.bulkOperations, payload);
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.message || response.data.error || 'Failed to perform bulk operations');
+  },
+
+  // Receipt Management
+  async getAllReceipts(): Promise<any> {
+    const response = await api.get<ApiResponse<any>>(API_ENDPOINTS.receipts.all);
+    if (response.data.success && response.data.data) return response.data.data;
+    throw new Error(response.data.error || 'Failed to fetch receipts');
+  },
+
+  async getReceiptContent(reffId: string): Promise<any> {
+    const response = await api.get<ApiResponse<any>>(API_ENDPOINTS.receipts.get(reffId));
+    if (response.data.success && response.data.data) return response.data.data;
+    throw new Error(response.data.error || 'Failed to fetch receipt content');
+  },
+
+  async downloadReceipt(reffId: string): Promise<Blob> {
+    const response = await api.get(API_ENDPOINTS.receipts.download(reffId), { responseType: 'blob' });
+    return response.data as Blob;
+  },
+
+  async deleteReceipt(reffId: string): Promise<any> {
+    const response = await api.delete<ApiResponse<any>>(API_ENDPOINTS.receipts.delete(reffId));
+    if (response.data.success) return response.data;
+    throw new Error(response.data.error || 'Failed to delete receipt');
   },
 };
 

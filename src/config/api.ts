@@ -22,6 +22,7 @@ export const API_ENDPOINTS = {
   transactions: {
     search: (reffId: string) => `/api/dashboard/transactions/search/${reffId}`,
     recent: (limit?: number) => `/api/dashboard/transactions/recent${limit ? `?limit=${limit}` : ""}`,
+    withReceipt: (reffId: string) => `/api/dashboard/transactions/${reffId}/with-receipt`,
   },
   analytics: {
     advanced: "/api/dashboard/analytics/advanced",
@@ -50,4 +51,10 @@ export const API_ENDPOINTS = {
     bulkOperations: "/api/dashboard/products/stock/bulk-operations",
   },
   export: (format: string) => `/api/dashboard/export/${format}`,
+  receipts: {
+    all: "/api/dashboard/receipts",
+    get: (reffId: string) => `/api/dashboard/receipts/${reffId}`,
+    download: (reffId: string) => `/api/dashboard/receipts/${reffId}/download`,
+    delete: (reffId: string) => `/api/dashboard/receipts/${reffId}`,
+  },
 } as const;

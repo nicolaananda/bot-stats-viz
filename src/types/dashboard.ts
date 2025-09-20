@@ -358,6 +358,11 @@ export interface TransactionDetail {
   payment_method?: string;
   tanggal: string;
   profit: number;
+  deliveredAccount?: string | null;
+  receiptExists?: boolean;
+  receiptContent?: string;
+  user_id?: string;
+  order_id?: string;
 }
 
 export interface UserStats {

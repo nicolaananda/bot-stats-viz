@@ -197,3 +197,10 @@ All colors MUST be HSL.
     transform: translateY(-2px);
   }
 }
+
+/* Dialog backdrop blur */
+[data-radix-dialog-overlay] {
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  background-color: rgba(0, 0, 0, 0.3) !important;
+}
