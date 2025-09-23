@@ -46,12 +46,27 @@ export default function ProductDetailPage() {
 
   // Mutations
   const addStockMutation = useMutation({
-    mutationFn: (data: any) => dashboardApi.addStock(productId!, data),
+    mutationFn: (data: any) => {
+      const items = (data?.stockItems ?? []).map((it: any) => {
+        const sanitize = (v: string) => (v ?? '').toString().trim().replace(/\|/g, '/');
+        const email = sanitize(it.email);
+        const password = sanitize(it.password);
+        const profile = sanitize(it.profile);
+        const pin = sanitize(it.pin);
+        const notes = sanitize(it.notes);
+        if (!email || !password) {
+          throw new Error('Email and password are required');
+        }
+        return [email, password, profile, pin, notes].join('|');
+      });
+      const notes = (data?.notes ?? '').toString();
+      return dashboardApi.updateProductStock(productId!, { action: 'add', stockItems: items, notes });
+    },
     onSuccess: (result) => {
       console.log("✅ Add stock success:", result);
       toast({
         title: "Stock Added Successfully",
-        description: `Added ${result.addedItems || 1} stock items to ${result.productName}`,
+        description: `New stock count: ${result.newStockCount}`,
       });
       // Force refresh the query
       queryClient.invalidateQueries({ queryKey: ["product-details", productId] });
@@ -68,13 +83,28 @@ export default function ProductDetailPage() {
   });
 
   const editStockMutation = useMutation({
-    mutationFn: ({ index, data }: { index: number; data: any }) => 
-      dashboardApi.editStock(productId!, index, data),
-    onSuccess: (result) => {
-      console.log("✅ Edit stock success:", result);
+    mutationFn: ({ index, data }: { index: number; data: any }) => {
+      const item = data?.stockItem ?? data;
+      const email = (item?.email ?? '').trim();
+      const password = (item?.password ?? '').trim();
+      const profile = (item?.profile ?? '').toString();
+      const pin = (item?.pin ?? '').toString();
+      const notes = (item?.notes ?? '').toString();
+
+      if (!email || !password) {
+        return Promise.reject(new Error('Email and password are required'));
+      }
+
+      // Sanitize pipes inside fields to avoid breaking the format
+      const sanitize = (v: string) => v.replace(/\|/g, '/');
+      const raw = [email, password, profile, pin, notes].map(sanitize).join('|');
+      return dashboardApi.editStockItem(productId!, { index, value: raw });
+    },
+    onSuccess: () => {
+      console.log("✅ Edit stock success");
       toast({
         title: "Stock Updated Successfully",
-        description: `Updated stock item at index ${result.stockIndex}`,
+        description: `Stock item has been updated`,
       });
       // Force refresh the query
       queryClient.invalidateQueries({ queryKey: ["product-details", productId] });
@@ -91,12 +121,12 @@ export default function ProductDetailPage() {
   });
 
   const deleteStockMutation = useMutation({
-    mutationFn: (index: number) => dashboardApi.deleteStock(productId!, index),
-    onSuccess: (result) => {
-      console.log("✅ Delete stock success:", result);
+    mutationFn: (index: number) => dashboardApi.deleteStockItem(productId!, { index }),
+    onSuccess: () => {
+      console.log("✅ Delete stock success");
       toast({
         title: "Stock Deleted Successfully",
-        description: `Deleted stock item from ${result.productName}`,
+        description: `Stock item has been deleted`,
       });
       // Force refresh the query
       queryClient.invalidateQueries({ queryKey: ["product-details", productId] });
@@ -398,7 +428,7 @@ export default function ProductDetailPage() {
       <BulkDeleteDialog
         open={bulkDeleteOpen}
         onOpenChange={setBulkDeleteOpen}
-        totalItems={totalStockCount}
+        totalStockCount={totalStockCount}
         onSubmit={handleBulkDelete}
         isLoading={bulkDeleteMutation.isPending}
       />

@@ -183,6 +183,28 @@ export default function ProductsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Top Products Summary at the top */}
+          {productStats?.topProducts?.length ? (
+            <div className="mb-6 space-y-2">
+              <h4 className="font-semibold">Top Products</h4>
+              <div className="grid gap-2 md:grid-cols-2">
+                {productStats.topProducts.slice(0, 5).map((product: any, index: number) => (
+                  <div key={product.id ?? index} className="flex items-center justify-between rounded-md border p-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                        {index + 1}
+                      </div>
+                      <span className="font-medium truncate max-w-[200px]" title={product.name}>{product.name}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <Badge variant="secondary">{product.totalSold?.toLocaleString?.() ?? product.sold ?? 0} sold</Badge>
+                      <Badge variant="outline">{formatCurrency(product.totalRevenue ?? product.revenue ?? 0)}</Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
           <Table>
             <TableHeader>
               <TableRow>

@@ -43,7 +43,17 @@ import {
   ReplaceAllStockRequest,
   ReplaceAllStockResponse,
   BulkOperationRequest,
-  BulkOperationResponse
+  BulkOperationResponse,
+  // Product CRUD and single-item stock types
+  ProductCreateRequest,
+  ProductUpdateRequest,
+  ProductCrudResponse,
+  AddSingleStockItemRequest,
+  AddSingleStockItemResponse,
+  EditSingleStockItemRequest,
+  EditSingleStockItemResponse,
+  DeleteSingleStockItemRequest,
+  DeleteSingleStockItemResponse
 } from '@/types/dashboard';
 import { API_CONFIG, API_ENDPOINTS } from '@/config/api';
 import { validateArrayData, validateObjectData, safeGet } from '@/lib/api-utils';
@@ -614,6 +624,31 @@ export const dashboardApi = {
     throw new Error(response.data.error || 'Failed to fetch product stock');
   },
 
+  // Product CRUD per contract
+  async createProduct(payload: ProductCreateRequest): Promise<ProductCrudResponse> {
+    const response = await api.post<ApiResponse<any>>(API_ENDPOINTS.products.create, payload);
+    if (response.data.success) return { success: true, data: response.data.data };
+    throw new Error(response.data.error || 'Failed to create product');
+  },
+
+  async getProduct(productId: string): Promise<ProductCrudResponse> {
+    const response = await api.get<ApiResponse<any>>(API_ENDPOINTS.products.get(productId));
+    if (response.data.success) return { success: true, data: response.data.data };
+    throw new Error(response.data.error || 'Failed to get product');
+  },
+
+  async updateProduct(productId: string, payload: ProductUpdateRequest): Promise<ProductCrudResponse> {
+    const response = await api.patch<ApiResponse<any>>(API_ENDPOINTS.products.update(productId), payload);
+    if (response.data.success) return { success: true, data: response.data.data };
+    throw new Error(response.data.error || 'Failed to update product');
+  },
+
+  async deleteProduct(productId: string): Promise<ProductCrudResponse> {
+    const response = await api.delete<ApiResponse<any>>(API_ENDPOINTS.products.delete(productId));
+    if (response.data.success) return { success: true, data: response.data.data };
+    throw new Error(response.data.error || 'Failed to delete product');
+  },
+
   async getStockSummary(): Promise<StockSummaryResponse> {
     const response = await api.get<ApiResponse<StockSummaryResponse>>(API_ENDPOINTS.products.stockSummary);
     if (response.data.success && response.data.data) return response.data.data;
@@ -945,6 +980,31 @@ export const dashboardApi = {
     const response = await api.post<ApiResponse<BulkOperationResponse>>(API_ENDPOINTS.products.bulkOperations, payload);
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.message || response.data.error || 'Failed to perform bulk operations');
+  },
+
+  // Single stock item operations per contract
+  async addStockItem(productId: string, payload: AddSingleStockItemRequest): Promise<AddSingleStockItemResponse> {
+    const response = await api.post<ApiResponse<AddSingleStockItemResponse>>(API_ENDPOINTS.products.stockItem(productId), payload);
+    if (response.data.success && response.data.data) return response.data.data;
+    throw new Error(response.data.error || 'Failed to add stock item');
+  },
+
+  async editStockItem(productId: string, payload: EditSingleStockItemRequest): Promise<EditSingleStockItemResponse> {
+    const response = await api.patch<ApiResponse<EditSingleStockItemResponse>>(API_ENDPOINTS.products.stockItem(productId), payload as any);
+    if (response.data.success) {
+      // Some backends return only { success: true } without data
+      return response.data.data || { success: true };
+    }
+    throw new Error(response.data.message || response.data.error || 'Failed to edit stock item');
+  },
+
+  async deleteStockItem(productId: string, payload: DeleteSingleStockItemRequest): Promise<DeleteSingleStockItemResponse> {
+    const response = await api.delete<ApiResponse<DeleteSingleStockItemResponse>>(API_ENDPOINTS.products.stockItem(productId), { data: payload });
+    if (response.data.success) {
+      // Some backends return only { success: true } without data
+      return response.data.data || { success: true };
+    }
+    throw new Error(response.data.message || response.data.error || 'Failed to delete stock item');
   },
 
   // Receipt Management

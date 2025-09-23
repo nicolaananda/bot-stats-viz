@@ -650,6 +650,66 @@ export interface ReplaceAllStockResponse {
   notes?: string;
 }
 
+// Single stock item operations (per PRODUCT & STOCK API contract)
+export interface AddSingleStockItemRequest {
+  value: string; // formatted: "email|password|profile|pin|notes"
+  position?: number; // optional insert position
+}
+
+export interface AddSingleStockItemResponse {
+  productId: string;
+  newStockCount: number;
+}
+
+export interface EditSingleStockItemRequestByIndex {
+  index: number;
+  value: string;
+}
+
+export interface EditSingleStockItemRequestByMatch {
+  match: string;
+  value: string;
+}
+
+export type EditSingleStockItemRequest = EditSingleStockItemRequestByIndex | EditSingleStockItemRequestByMatch;
+
+export interface EditSingleStockItemResponse {
+  success: boolean;
+}
+
+export interface DeleteSingleStockItemRequestByIndex {
+  index: number;
+}
+
+export interface DeleteSingleStockItemRequestByMatch {
+  match: string;
+}
+
+export type DeleteSingleStockItemRequest = DeleteSingleStockItemRequestByIndex | DeleteSingleStockItemRequestByMatch;
+
+export interface DeleteSingleStockItemResponse {
+  success: boolean;
+}
+
+// Product CRUD types (minimal per contract)
+export interface ProductCreateRequest {
+  id: string;
+  name: string;
+  desc?: string;
+  priceB?: number;
+  priceS?: number;
+  priceG?: number;
+  snk?: string;
+  minStock?: number;
+}
+
+export type ProductUpdateRequest = Partial<ProductCreateRequest>;
+
+export interface ProductCrudResponse<T = any> {
+  success: boolean;
+  data?: T;
+}
+
 export interface BulkOperationRequest {
   operations: Array<{
     productId: string;

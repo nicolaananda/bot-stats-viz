@@ -31,6 +31,11 @@ export const API_ENDPOINTS = {
   products: {
     stats: "/api/dashboard/products/stats",
     performance: "/api/dashboard/products/performance",
+    // Product CRUD
+    create: "/api/dashboard/products",
+    get: (productId: string) => `/api/dashboard/products/${productId}`,
+    update: (productId: string) => `/api/dashboard/products/${productId}`,
+    delete: (productId: string) => `/api/dashboard/products/${productId}`,
     stock: "/api/dashboard/products/stock",
     stockSummary: "/api/dashboard/products/stock/summary",
     stockAlerts: "/api/dashboard/products/stock/alerts",
@@ -49,6 +54,8 @@ export const API_ENDPOINTS = {
     getStockItem: (productId: string, stockIndex: number) => `/api/dashboard/products/${productId}/stock/${stockIndex}`,
     replaceAllStock: (productId: string) => `/api/dashboard/products/${productId}/stock/replace-all`,
     bulkOperations: "/api/dashboard/products/stock/bulk-operations",
+    // Single stock item ops per new contract
+    stockItem: (productId: string) => `/api/dashboard/products/${productId}/stock/item`,
   },
   export: (format: string) => `/api/dashboard/export/${format}`,
   receipts: {
