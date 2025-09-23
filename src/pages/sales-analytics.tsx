@@ -2,19 +2,11 @@ import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Users, BarChart3 } from "lucide-react";
+import { PageContainer } from "@/components/ui/page-container";
 
 export default function SalesAnalyticsPage() {
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Sales Analytics</h1>
-          <p className="text-muted-foreground">Comprehensive sales performance analysis</p>
-        </div>
-        <Badge variant="outline" className="text-sm">
-          Analytics
-        </Badge>
-      </div>
+    <PageContainer title="Sales Analytics" description="Comprehensive sales performance analysis">
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -144,6 +136,6 @@ export default function SalesAnalyticsPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

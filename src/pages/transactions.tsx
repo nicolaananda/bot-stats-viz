@@ -19,6 +19,7 @@ import { StatsCard } from '@/components/ui/stats-card';
 import { dashboardApi } from '@/services/api';
 import { formatCurrency, getTransactionUserName, getTransactionPaymentMethod, getPaymentMethodBadge, getTransactionReferenceId } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { PageContainer } from '@/components/ui/page-container';
 
 export default function TransactionsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -41,6 +42,7 @@ export default function TransactionsPage() {
     queryKey: ['dashboard-overview'],
     queryFn: dashboardApi.getOverview,
   });
+  const ov: any = overview as any;
 
   // Debounced combined search (ref ID via API + user/product/payment via local filter)
   const debouncedSearch = useCallback(
@@ -246,61 +248,51 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="flex-1 space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-slate-700 to-slate-500 bg-clip-text text-transparent">
-            Transactions
-          </h2>
-          <p className="text-slate-500">
-            Search transactions, view details, and export data
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={() => handleExport('json')}
-            variant="outline"
-            className="flex items-center gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
-          >
-            <Download className="h-4 w-4" />
-            Export JSON
-          </Button>
-          <Button
-            onClick={() => handleExport('csv')}
-            variant="outline"
-            className="flex items-center gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
-          >
-            <Download className="h-4 w-4" />
-            Export CSV
-          </Button>
-        </div>
+    <PageContainer title="Transactions" description="Search transactions, view details, and export data">
+      <div className="flex items-center justify-end gap-2">
+        <Button
+          onClick={() => handleExport('json')}
+          variant="outline"
+          className="flex items-center gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
+        >
+          <Download className="h-4 w-4" />
+          Export JSON
+        </Button>
+        <Button
+          onClick={() => handleExport('csv')}
+          variant="outline"
+          className="flex items-center gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
+        >
+          <Download className="h-4 w-4" />
+          Export CSV
+        </Button>
       </div>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Total Transactions"
-          value={overview?.totalTransaksi || 0}
+          value={ov?.totalTransaksi || 0}
           icon={CreditCard}
           className="hover:scale-105 bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-900/20 dark:to-gray-900/20"
         />
         <StatsCard
           title="Total Revenue"
-          value={formatCurrency(overview?.totalPendapatan || 0)}
+          value={formatCurrency(ov?.totalPendapatan || 0)}
           icon={CreditCard}
           className="hover:scale-105 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20"
         />
         <StatsCard
           title="Today's Transactions"
-          value={overview?.transaksiHariIni || 0}
-          change={`${formatCurrency(overview?.pendapatanHariIni || 0)} revenue`}
+          value={ov?.transaksiHariIni || 0}
+          change={`${formatCurrency(ov?.pendapatanHariIni || 0)} revenue`}
           changeType="positive"
           icon={CreditCard}
           className="hover:scale-105 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20"
         />
         <StatsCard
           title="Payment Methods"
-          value={`${overview?.metodeBayar?.saldo || 0} + ${overview?.metodeBayar?.qris || 0}`}
+          value={`${ov?.metodeBayar?.saldo || 0} + ${ov?.metodeBayar?.qris || 0}`}
           change="Active methods"
           changeType="neutral"
           icon={CreditCard}
@@ -715,6 +707,6 @@ export default function TransactionsPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </PageContainer>
   );
 }

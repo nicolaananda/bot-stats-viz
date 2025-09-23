@@ -2,19 +2,11 @@ import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Package, AlertTriangle, CheckCircle, TrendingUp, BarChart3, Activity } from "lucide-react";
+import { PageContainer } from "@/components/ui/page-container";
 
 export default function InventoryAnalyticsPage() {
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Inventory Analytics</h1>
-          <p className="text-muted-foreground">Comprehensive inventory management and analytics</p>
-        </div>
-        <Badge variant="outline" className="text-sm">
-          Analytics
-        </Badge>
-      </div>
+    <PageContainer title="Inventory Analytics" description="Comprehensive inventory management and analytics">
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -173,6 +165,6 @@ export default function InventoryAnalyticsPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { dashboardApi } from '@/services/api';
 import { TrendingUp, BarChart3, Calendar } from 'lucide-react';
+import { PageContainer } from '@/components/ui/page-container';
 
 const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))'];
 
@@ -61,18 +62,7 @@ export default function Charts() {
   }
 
   return (
-    <div className="flex-1 p-6 md:p-8">
-      <div className="mx-auto w-full max-w-7xl space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-primary bg-clip-text text-transparent">
-              Analytics Charts
-            </h2>
-            <p className="text-muted-foreground">
-              Detailed analytics and performance metrics
-            </p>
-          </div>
-        </div>
+    <PageContainer title="Analytics Charts" description="Detailed analytics and performance metrics">
 
         <Tabs defaultValue="daily" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
@@ -331,7 +321,6 @@ export default function Charts() {
             </div>
           </TabsContent>
         </Tabs>
-      </div>
-    </div>
+    </PageContainer>
   );
 }

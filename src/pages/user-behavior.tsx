@@ -17,7 +17,7 @@ import { Progress } from '@/components/ui/progress';
 import { StatsCard } from '@/components/ui/stats-card';
 import { dashboardApi } from '@/services/api';
 import { UserBehaviorAnalytics } from '@/types/dashboard';
-import {
+import { 
   BarChart,
   Bar,
   XAxis,
@@ -30,6 +30,7 @@ import {
   Cell,
   Pie
 } from 'recharts';
+import { PageContainer } from '@/components/ui/page-container';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 const SEGMENT_COLORS = {
@@ -105,8 +106,8 @@ export default function UserBehaviorPage() {
   const totalUsers = Object.values(behavior.segmentStats).reduce((sum, stats) => sum + stats.count, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900">
-      <div className="container mx-auto p-6 space-y-8">
+    <PageContainer title="User Behavior Analytics" description="Discover user patterns, segments, and behavioral insights to drive growth">
+      <div className="space-y-8">
         {/* Header with enhanced styling */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 p-8 text-white shadow-xl">
           <div className="absolute inset-0 bg-black/20"></div>
@@ -564,6 +565,6 @@ export default function UserBehaviorPage() {
         </TabsContent>
       </Tabs>
       </div>
-    </div>
+    </PageContainer>
   );
 } 

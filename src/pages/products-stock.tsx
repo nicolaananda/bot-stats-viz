@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { ChevronUp, ChevronDown } from 'lucide-react';
+import { PageContainer } from '@/components/ui/page-container';
 
 const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
@@ -111,12 +112,8 @@ const ProductsStockPageComponent = () => {
 	}
 
 	return (
-		<div className="flex-1 space-y-6 p-6">
-			<div className="flex items-center justify-between">
-				<div>
-					<h2 className="text-3xl font-bold tracking-tight bg-gradient-primary bg-clip-text text-transparent">Manajemen Produk</h2>
-					<p className="text-muted-foreground">Visualisasi dan pemantauan stok produk</p>
-				</div>
+		<PageContainer title="Manajemen Produk" description="Visualisasi dan pemantauan stok produk">
+			<div className="flex items-center justify-end">
 				<Button variant="secondary" onClick={() => dashboardApi.exportStockCSV()}>Export CSV</Button>
 			</div>
 
@@ -327,7 +324,7 @@ const ProductsStockPageComponent = () => {
 					</CardContent>
 				</Card>
 			)} */}
-		</div>
+		</PageContainer>
 	);
 };
 

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ArrowLeft, CreditCard, DollarSign, User, Phone, Shield, TrendingUp, Activity, Eye } from 'lucide-react';
 import { formatCurrency, formatDate, formatTime, getTransactionUserName, getTransactionPaymentMethod, getPaymentMethodBadge, getTransactionReferenceId } from '@/lib/utils';
+import { PageContainer } from '@/components/ui/page-container';
 
 export default function UserDetailPage() {
   const { userId } = useParams<{ userId: string }>();
@@ -215,7 +216,7 @@ export default function UserDetailPage() {
   };
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <PageContainer title="User Details" description={`Comprehensive information about ${formattedUsername}`}>
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button
@@ -227,12 +228,6 @@ export default function UserDetailPage() {
           <ArrowLeft className="h-4 w-4" />
           Back to Users
         </Button>
-        <div>
-          <h1 className="text-2xl font-bold">User Details</h1>
-          <p className="text-muted-foreground">
-            Comprehensive information about {formattedUsername}
-          </p>
-        </div>
       </div>
 
       {/* User Information Card */}
@@ -507,6 +502,6 @@ export default function UserDetailPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 } 

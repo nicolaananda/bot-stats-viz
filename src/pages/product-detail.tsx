@@ -11,6 +11,7 @@ import { dashboardApi } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { StockManagementDialog } from "@/components/stock-management-dialog";
 import { BulkDeleteDialog } from "@/components/bulk-delete-dialog";
+import { PageContainer } from "@/components/ui/page-container";
 
 interface EditingStock {
   index: number;
@@ -249,19 +250,13 @@ export default function ProductDetailPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
+    <PageContainer title={details.productName} description={details.description}>
+      {/* Header actions */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => navigate("/products")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Products
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">{details.productName}</h1>
-            <p className="text-muted-foreground">{details.description}</p>
-          </div>
-        </div>
+        <Button variant="ghost" onClick={() => navigate("/products")}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Products
+        </Button>
         <Badge variant="outline" className="text-sm">
           {details.category}
         </Badge>
@@ -432,6 +427,6 @@ export default function ProductDetailPage() {
         onSubmit={handleBulkDelete}
         isLoading={bulkDeleteMutation.isPending}
       />
-    </div>
+    </PageContainer>
   );
 }

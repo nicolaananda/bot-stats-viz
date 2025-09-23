@@ -16,6 +16,7 @@ import { StatsCard } from '@/components/ui/stats-card';
 import { Badge } from '@/components/ui/badge';
 import { dashboardApi } from '@/services/api';
 import { AdvancedAnalytics } from '@/types/dashboard';
+import { PageContainer } from '@/components/ui/page-container';
 import {
   BarChart,
   Bar,
@@ -99,14 +100,7 @@ export default function AdvancedAnalyticsPage() {
   }));
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Advanced Analytics</h1>
-        <p className="text-muted-foreground">
-          Comprehensive business insights and advanced metrics
-        </p>
-      </div>
+    <PageContainer title="Advanced Analytics" description="Comprehensive business insights and advanced metrics">
 
       {/* Overview Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
@@ -389,6 +383,6 @@ export default function AdvancedAnalyticsPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 } 

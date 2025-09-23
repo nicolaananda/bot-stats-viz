@@ -13,6 +13,7 @@ import { dashboardApi } from '@/services/api';
 import { useToast } from '@/components/ui/use-toast';
 import { formatCurrency, getTransactionPaymentMethod, getTransactionReferenceId } from '@/lib/utils';
 import { DebugPanel } from '@/components/ui/debug-panel';
+import { PageContainer } from '@/components/ui/page-container';
 
 export default function UsersPage() {
 	const [searchTerm, setSearchTerm] = useState('');
@@ -161,27 +162,16 @@ export default function UsersPage() {
 	}
 
 	return (
-		<div className="flex-1 p-6 md:p-8">
-			<div className="mx-auto w-full max-w-7xl space-y-6">
-				<div className="flex items-center justify-between">
-					<div>
-						<h2 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-primary bg-clip-text text-transparent">
-							User Management
-						</h2>
-						<p className="text-muted-foreground">
-							Manage users, track activity, and analyze user behavior
-						</p>
-					</div>
-					<div className="flex items-center gap-2">
-						<Button variant={compact ? 'default' : 'outline'} size="sm" onClick={() => setCompact((v) => !v)}>
-							{compact ? 'Comfortable' : 'Compact'}
-						</Button>
-						<Button variant="outline" size="sm" onClick={exportCurrentViewToCSV} className="flex items-center gap-2">
-							<Download className="h-4 w-4" />
-							Export CSV
-						</Button>
-					</div>
-				</div>
+		<PageContainer title="User Management" description="Manage users, track activity, and analyze user behavior">
+			<div className="flex items-center justify-end gap-2">
+				<Button variant={compact ? 'default' : 'outline'} size="sm" onClick={() => setCompact((v) => !v)}>
+					{compact ? 'Comfortable' : 'Compact'}
+				</Button>
+				<Button variant="outline" size="sm" onClick={exportCurrentViewToCSV} className="flex items-center gap-2">
+					<Download className="h-4 w-4" />
+					Export CSV
+				</Button>
+			</div>
 
 				{/* Stats Cards */}
 				<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -446,7 +436,6 @@ export default function UsersPage() {
 						isVisible={true}
 					/>
 				)} */}
-			</div>
-		</div>
+		</PageContainer>
 	);
 }

@@ -72,18 +72,18 @@ export function DashboardSidebar() {
   };
 
   const getNavClasses = (path: string) => {
-    const baseClasses = "w-full justify-start transition-all duration-200";
+    const baseClasses = "w-full justify-start transition-all duration-200 rounded-lg";
     if (isActive(path)) {
       return `${baseClasses} bg-gradient-primary text-primary-foreground shadow-glow`;
     }
-    return `${baseClasses} hover:bg-accent hover:text-accent-foreground`;
+    return `${baseClasses} hover:bg-accent/70 hover:text-accent-foreground`;
   };
 
   return (
-    <Sidebar className={`${collapsed ? "w-16" : "w-64"} border-r border-border bg-sidebar`}>
+    <Sidebar className={`${collapsed ? "w-16" : "w-64"} border-r border-border bg-sidebar/90 backdrop-blur supports-[backdrop-filter]:bg-sidebar/80`}>
       <SidebarContent>
         {/* Logo */}
-        <div className="p-6 border-b border-sidebar-border">
+        <div className="p-6 border-b border-sidebar-border/70">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
               <BarChart3 className="w-4 h-4 text-white" />
@@ -101,7 +101,7 @@ export function DashboardSidebar() {
 
         {/* Main Navigation */}
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground">Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationItems.map((item) => (
@@ -123,7 +123,7 @@ export function DashboardSidebar() {
 
         {/* Advanced Analytics */}
         <SidebarGroup>
-          <SidebarGroupLabel>Advanced Analytics</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground">Advanced Analytics</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {advancedAnalyticsItems.map((item) => (

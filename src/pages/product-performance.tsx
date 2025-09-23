@@ -32,6 +32,7 @@ import {
   PieChart as RechartsPieChart,
   Cell
 } from 'recharts';
+import { PageContainer } from '@/components/ui/page-container';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
@@ -129,14 +130,7 @@ export default function ProductPerformancePage() {
   }));
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Product Performance</h1>
-        <p className="text-muted-foreground">
-          Detailed analysis of product sales, profitability, and performance metrics
-        </p>
-      </div>
+    <PageContainer title="Product Performance" description="Detailed analysis of product sales, profitability, and performance metrics">
 
       {/* Summary Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -213,7 +207,7 @@ export default function ProductPerformancePage() {
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={revenueData}>
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                     <XAxis 
                       dataKey="name" 
                       angle={-45}
@@ -227,10 +221,11 @@ export default function ProductPerformancePage() {
                         name === 'revenue' || name === 'profit' ? formatCurrency(Number(value)) : formatNumber(Number(value)),
                         name === 'revenue' ? 'Revenue' : name === 'profit' ? 'Profit' : 'Units Sold'
                       ]}
+                      contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8 }}
                     />
                     <Legend />
-                    <Bar dataKey="revenue" fill="#8884d8" />
-                    <Bar dataKey="profit" fill="#82ca9d" />
+                    <Bar dataKey="revenue" fill="#8884d8" radius={[6,6,0,0]} />
+                    <Bar dataKey="profit" fill="#82ca9d" radius={[6,6,0,0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -246,7 +241,7 @@ export default function ProductPerformancePage() {
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
                   <ScatterChart data={profitMarginData}>
-                    <CartesianGrid />
+                    <CartesianGrid className="opacity-30" />
                     <XAxis 
                       type="number" 
                       dataKey="revenue" 
@@ -264,6 +259,7 @@ export default function ProductPerformancePage() {
                         name === 'margin' ? `${value}%` : formatCurrency(Number(value)),
                         name === 'margin' ? 'Profit Margin' : 'Revenue'
                       ]}
+                      contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8 }}
                       labelFormatter={(label) => `Product: ${label}`}
                     />
                     <Scatter dataKey="margin" fill="#8884d8" />
@@ -400,6 +396,6 @@ export default function ProductPerformancePage() {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 } 

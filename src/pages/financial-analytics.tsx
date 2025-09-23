@@ -34,6 +34,7 @@ import {
   LineChart,
   Line
 } from 'recharts';
+import { PageContainer } from '@/components/ui/page-container';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
@@ -117,14 +118,7 @@ export default function FinancialAnalyticsPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Financial Analytics</h1>
-        <p className="text-muted-foreground">
-          Comprehensive financial analysis and business health insights
-        </p>
-      </div>
+    <PageContainer title="Financial Analytics" description="Comprehensive financial analysis and business health insights">
 
       {/* Key Financial Metrics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
@@ -290,11 +284,11 @@ export default function FinancialAnalyticsPage() {
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={paymentMethodData}>
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                     <XAxis dataKey="name" />
                     <YAxis tickFormatter={(value) => formatCurrency(value)} />
-                    <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                    <Bar dataKey="value" fill="#8884d8" />
+                    <Tooltip formatter={(value) => formatCurrency(Number(value))} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8 }} />
+                    <Bar dataKey="value" fill="#8884d8" radius={[6,6,0,0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -346,7 +340,17 @@ export default function FinancialAnalyticsPage() {
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
                 <AreaChart data={financial.trends.daily}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <defs>
+                    <linearGradient id="finRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8884d8" stopOpacity={0.35}/>
+                      <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="finProfit" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.35}/>
+                      <stop offset="95%" stopColor="#82ca9d" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                   <XAxis dataKey="date" />
                   <YAxis tickFormatter={(value) => formatCurrency(value)} />
                   <Tooltip 
@@ -354,24 +358,11 @@ export default function FinancialAnalyticsPage() {
                       formatCurrency(Number(value)),
                       name === 'revenue' ? 'Revenue' : 'Profit'
                     ]}
+                    contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8 }}
                   />
                   <Legend />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stackId="1"
-                    stroke="#8884d8"
-                    fill="#8884d8"
-                    fillOpacity={0.6}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="profit"
-                    stackId="2"
-                    stroke="#82ca9d"
-                    fill="#82ca9d"
-                    fillOpacity={0.6}
-                  />
+                  <Area type="monotone" dataKey="revenue" stroke="#8884d8" strokeWidth={2} fill="url(#finRevenue)" />
+                  <Area type="monotone" dataKey="profit" stroke="#82ca9d" strokeWidth={2} fill="url(#finProfit)" />
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>
@@ -471,6 +462,6 @@ export default function FinancialAnalyticsPage() {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 } 

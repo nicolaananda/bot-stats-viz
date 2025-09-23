@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate, formatTime, getTransactionUserName, getTransactionPaymentMethod, getTransactionReferenceId } from '@/lib/utils';
+import { PageContainer } from '@/components/ui/page-container';
 
 export default function DashboardOverview() {
   const [selectedDetail, setSelectedDetail] = useState<any>(null);
@@ -205,20 +206,10 @@ export default function DashboardOverview() {
   const bestDay = chartData.reduce((best, p) => (p.revenue > (best?.revenue || 0) ? p : best), undefined as undefined | { date: string; revenue: number; transactions: number; profit: number });
 
   return (
-    <div className="flex-1 p-6 md:p-8">
-      {/* <EnvironmentBanner /> */}
-      
-      <div className="mx-auto w-full max-w-7xl space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-primary bg-clip-text text-transparent">
-              Dashboard Overview
-            </h1>
-            <p className="text-base md:text-lg text-muted-foreground mt-2">
-              Comprehensive analytics for your WhatsApp bot performance
-            </p>
-          </div>
-        </div>
+    <PageContainer
+      title="Dashboard Overview"
+      description="Comprehensive analytics for your WhatsApp bot performance"
+    >
 
         {/* Stats Cards */}
         <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -477,7 +468,6 @@ export default function DashboardOverview() {
             </div>
           </CardContent>
         </Card>
-      </div>
-    </div>
+    </PageContainer>
   );
 }

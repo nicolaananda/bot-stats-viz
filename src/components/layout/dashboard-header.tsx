@@ -14,9 +14,9 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export function DashboardHeader() {
   return (
-    <header className="border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-40">
-      <div className="flex h-16 items-center px-6 gap-4">
-        <SidebarTrigger className="mr-2" />
+    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+      <div className="flex h-16 items-center px-4 md:px-6 gap-3 md:gap-4">
+        <SidebarTrigger className="mr-1 md:mr-2" />
         
         {/* Search
         <div className="flex-1 max-w-md">
@@ -30,7 +30,7 @@ export function DashboardHeader() {
         </div> */}
 
         {/* Header Actions */}
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-1 md:gap-2">
           {/* Notifications
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-4 w-4" />
@@ -42,8 +42,8 @@ export function DashboardHeader() {
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                <Avatar className="h-10 w-10">
+              <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-accent">
+                <Avatar className="h-10 w-10 ring-1 ring-border/60">
                   <AvatarImage src="/avatars/01.png" alt="@admin" />
                   <AvatarFallback className="bg-gradient-primary text-white">
                     AD

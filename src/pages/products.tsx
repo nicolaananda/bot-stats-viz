@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { StatsCard } from '@/components/ui/stats-card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import { dashboardApi } from '@/services/api';
+import { PageContainer } from '@/components/ui/page-container';
 
 const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))'];
 
@@ -56,17 +57,7 @@ export default function ProductsPage() {
   })) || [];
 
   return (
-    <div className="flex-1 space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight bg-gradient-primary bg-clip-text text-transparent">
-            Product Analytics
-          </h2>
-          <p className="text-muted-foreground">
-            Track product performance, sales, and revenue insights
-          </p>
-        </div>
-      </div>
+    <PageContainer title="Product Analytics" description="Track product performance, sales, and revenue insights">
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -255,6 +246,6 @@ export default function ProductsPage() {
           </Table>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

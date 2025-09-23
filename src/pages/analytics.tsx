@@ -13,6 +13,7 @@ import { UserActivityDebug } from '@/components/ui/user-activity-debug';
 import { DataComparison } from '@/components/ui/data-comparison';
 import { UserIdDebug } from '@/components/ui/user-id-debug';
 import { useMemo, useState, useEffect } from 'react';
+import { PageContainer } from '@/components/ui/page-container';
 
 export default function AnalyticsPage() {
   const { data: overview, isLoading: overviewLoading, error: overviewError } = useQuery({
@@ -223,18 +224,7 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="flex-1 p-6 md:p-8">
-      <div className="mx-auto w-full max-w-7xl space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-primary bg-clip-text text-transparent">
-              Advanced Analytics
-            </h2>
-            <p className="text-muted-foreground">
-              Deep insights into your WhatsApp bot performance and user behavior
-            </p>
-          </div>
-        </div>
+    <PageContainer title="Advanced Analytics" description="Deep insights into your WhatsApp bot performance and user behavior">
 
         {/* AI Status */}
         <div className="grid gap-2 md:grid-cols-1 lg:grid-cols-2">
@@ -543,7 +533,6 @@ export default function AnalyticsPage() {
             </div>
           </TabsContent>
         </Tabs>
-      </div>
-    </div>
+    </PageContainer>
   );
 }
