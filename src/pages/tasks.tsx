@@ -9,7 +9,7 @@ import { formatCurrency, formatDate, formatTime, getTransactionUserName, getTran
 
 export default function TasksPage() {
   const { data: recentTransactions, isLoading, error } = useQuery({
-    queryKey: ['recent-transactions'],
+    queryKey: ['recent-transactions', 'tasks', 20],
     queryFn: () => dashboardApi.getRecentTransactions(20),
   });
 

@@ -15,9 +15,9 @@ import { cn } from "@/lib/utils";
 
 export function DashboardHeader() {
   return (
-    <header className="sticky top-0 z-40 w-full">
+    <header className="sticky top-0 z-30 w-full">
       <div className="flex h-16 items-center px-4 md:px-6 gap-3 md:gap-4 bg-background/50 backdrop-blur-sm transition-all duration-300">
-        <SidebarTrigger className="mr-1 md:mr-2 text-muted-foreground hover:text-primary transition-colors" />
+        <SidebarTrigger className="md:hidden mr-1 md:mr-2 text-muted-foreground hover:text-primary transition-colors relative" />
 
         {/* Breadcrumbs or Page Title could go here */}
         <div className="hidden md:flex items-center text-sm text-muted-foreground">

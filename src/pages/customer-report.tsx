@@ -6,7 +6,7 @@ import { formatCurrency, getTransactionUserName } from '@/lib/utils';
 
 export default function CustomerReportPage() {
   const { data: recentTransactions, isLoading, error } = useQuery({
-    queryKey: ['recent-transactions'],
+    queryKey: ['recent-transactions', 'customer-report', 50],
     queryFn: () => dashboardApi.getRecentTransactions(50),
   });
 

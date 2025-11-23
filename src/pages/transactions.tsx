@@ -36,8 +36,17 @@ export default function TransactionsPage() {
   const [itemsPerPage] = useState(10);
 
   const { data: recentTransactions, isLoading } = useQuery({
-    queryKey: ['recent-transactions'],
-    queryFn: () => dashboardApi.getRecentTransactions(1000),
+    queryKey: ['recent-transactions', 'full', 10000],
+    queryFn: async () => {
+      const result = await dashboardApi.getRecentTransactions(10000);
+      console.log('🔍 Transactions loaded:', {
+        requested: 10000,
+        received: result.transactions?.length || 0,
+        count: result.count,
+        limit: result.limit
+      });
+      return result;
+    },
   });
 
   const { data: overview } = useQuery({
@@ -236,6 +245,11 @@ export default function TransactionsPage() {
     }
   };
 
+  // Reset page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -267,11 +281,6 @@ export default function TransactionsPage() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentTransactions = filteredTransactions.slice(startIndex, endIndex);
-
-  // Reset page when search changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
 
   return (
     <div className="min-h-screen bg-muted/30 p-4 md:p-8 space-y-8">

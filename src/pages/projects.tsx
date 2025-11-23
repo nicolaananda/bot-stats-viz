@@ -14,7 +14,7 @@ export default function ProjectsPage() {
   });
 
   const { data: recentTransactions } = useQuery({
-    queryKey: ['recent-transactions'],
+    queryKey: ['recent-transactions', 'projects', 10],
     queryFn: () => dashboardApi.getRecentTransactions(10),
   });
 

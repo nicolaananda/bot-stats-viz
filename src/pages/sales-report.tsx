@@ -11,7 +11,7 @@ export default function SalesReportPage() {
   });
 
   const { data: recentTransactions } = useQuery({
-    queryKey: ['recent-transactions'],
+    queryKey: ['recent-transactions', 'sales-report', 100],
     queryFn: () => dashboardApi.getRecentTransactions(100),
   });
 

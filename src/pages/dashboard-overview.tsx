@@ -33,7 +33,7 @@ export default function DashboardOverview() {
   });
 
   const { data: recentTransactions } = useQuery({
-    queryKey: ['recent-transactions'],
+    queryKey: ['recent-transactions', 'overview', 5],
     queryFn: () => dashboardApi.getRecentTransactions(5),
   });
 
@@ -593,7 +593,96 @@ export default function DashboardOverview() {
           </CardContent>
         </Card>
 
+        {/* Quick Stats & Performance */}
+        <Card className="card-premium border-none shadow-soft">
+          <CardHeader>
+            <CardTitle>Quick Stats</CardTitle>
+            <CardDescription>Key performance indicators</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Average Order Value */}
+              <div className="p-4 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                      <DollarSign className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-sm font-medium text-muted-foreground">Avg Order Value</span>
+                  </div>
+                </div>
+                <p className="text-2xl font-bold text-foreground">{formatCurrency(averageOrderValue)}</p>
+                <p className="text-xs text-muted-foreground mt-1">Per transaction</p>
+              </div>
 
+              {/* Best Day */}
+              {bestDay && (
+                <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/5 to-emerald-500/10 border border-emerald-500/20">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                        <TrendingUp className="h-4 w-4 text-emerald-500" />
+                      </div>
+                      <span className="text-sm font-medium text-muted-foreground">Best Day</span>
+                    </div>
+                  </div>
+                  <p className="text-lg font-bold text-foreground">{formatCurrency(bestDay.revenue)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{formatDate(bestDay.date)} • {bestDay.transactions} transactions</p>
+                </div>
+              )}
+
+              {/* 7-Day Average */}
+              <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/5 to-blue-500/10 border border-blue-500/20">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                      <Activity className="h-4 w-4 text-blue-500" />
+                    </div>
+                    <span className="text-sm font-medium text-muted-foreground">7-Day Average</span>
+                  </div>
+                </div>
+                <p className="text-2xl font-bold text-foreground">{formatCurrency(avg7Revenue)}</p>
+                <p className="text-xs text-muted-foreground mt-1">Daily revenue average</p>
+              </div>
+
+              {/* Payment Method Split */}
+              <div className="pt-4 border-t border-border">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-muted-foreground">Payment Split</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                      <span className="text-muted-foreground">QRIS</span>
+                    </div>
+                    <span className="font-medium text-foreground">
+                      {overview?.metodeBayar?.qris ? ((overview.metodeBayar.qris / (overview?.totalTransaksi || 1)) * 100).toFixed(1) : 0}%
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                      <span className="text-muted-foreground">Saldo</span>
+                    </div>
+                    <span className="font-medium text-foreground">
+                      {overview?.metodeBayar?.saldo ? ((overview.metodeBayar.saldo / (overview?.totalTransaksi || 1)) * 100).toFixed(1) : 0}%
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+                      <span className="text-muted-foreground">Others</span>
+                    </div>
+                    <span className="font-medium text-foreground">
+                      {overview?.metodeBayar?.unknown ? ((overview.metodeBayar.unknown / (overview?.totalTransaksi || 1)) * 100).toFixed(1) : 0}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -101,53 +101,52 @@ const ProductsStockPageComponent = () => {
 
 	if (stockLoading) {
 		return (
-			<div className="min-h-screen bg-gray-900 text-white">
-				<div className="flex items-center justify-center min-h-[400px]">
-					<div className="text-center">
-						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-						<p className="text-gray-400">Memuat data stok...</p>
+			<div className="min-h-screen flex items-center justify-center">
+				<div className="text-center space-y-4">
+					<div className="relative w-16 h-16 mx-auto">
+						<div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+						<div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
 					</div>
+					<p className="text-muted-foreground font-medium animate-pulse">Memuat data stok...</p>
 				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="min-h-screen bg-gray-900 text-white">
+		<div className="min-h-screen bg-muted/30 p-4 md:p-8 space-y-8">
 			{/* Header */}
-			<div className="p-6 border-b border-gray-800">
-				<div className="flex items-center justify-between">
-					<div>
-						<h1 className="text-2xl font-bold text-white">Manajemen Produk</h1>
-						<p className="text-gray-400 mt-1">Visualisasi dan pemantauan stok produk</p>
-					</div>
-					<Button variant="secondary" onClick={() => dashboardApi.exportStockCSV()} className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700">
-						Export CSV
-					</Button>
+			<div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+				<div>
+					<h1 className="text-3xl font-bold tracking-tight text-foreground">Manajemen Produk</h1>
+					<p className="text-muted-foreground mt-1">Visualisasi dan pemantauan stok produk</p>
 				</div>
+				<Button variant="outline" onClick={() => dashboardApi.exportStockCSV()} className="bg-background/50 backdrop-blur-sm">
+					Export CSV
+				</Button>
 			</div>
 
-			<div className="p-6 space-y-6">
+			<div className="space-y-6">
 
-			<div className="grid gap-4 md:grid-cols-3">
-				<Card className="bg-gray-800 border-gray-700">
+			<div className="grid gap-6 md:grid-cols-3">
+				<Card className="card-premium border-none shadow-soft">
 					<CardHeader>
-						<CardTitle className="text-white">Ringkasan Stok</CardTitle>
-						<CardDescription className="text-gray-400">Status stok saat ini</CardDescription>
+						<CardTitle>Ringkasan Stok</CardTitle>
+						<CardDescription>Status stok saat ini</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-2">
-						<p>Total Produk: <span className="font-medium">{summary?.totalProducts ?? stock?.totalProducts ?? 0}</span></p>
-						<p>Total Item Stok: <span className="font-medium">{summary?.totalStockItems ?? products.reduce((s, p) => s + (p.stockCount || 0), 0)}</span></p>
-						<p>Low Stock: <span className="font-medium">{summary?.lowStockProducts ?? lowStock.length}</span></p>
-						<p>Out of Stock: <span className="font-medium">{summary?.outOfStockProducts ?? products.filter(p => p.stockStatus === 'out').length}</span></p>
+						<p className="text-foreground">Total Produk: <span className="font-medium">{summary?.totalProducts ?? stock?.totalProducts ?? 0}</span></p>
+						<p className="text-foreground">Total Item Stok: <span className="font-medium">{summary?.totalStockItems ?? products.reduce((s, p) => s + (p.stockCount || 0), 0)}</span></p>
+						<p className="text-foreground">Low Stock: <span className="font-medium">{summary?.lowStockProducts ?? lowStock.length}</span></p>
+						<p className="text-foreground">Out of Stock: <span className="font-medium">{summary?.outOfStockProducts ?? products.filter(p => p.stockStatus === 'out').length}</span></p>
 					</CardContent>
 				</Card>
 
 				{/* Visualizations */}
-				<Card className="bg-gray-800 border-gray-700 md:col-span-2">
+				<Card className="card-premium border-none shadow-soft md:col-span-2">
 					<CardHeader>
-						<CardTitle className="text-white">Distribusi Stok per Kategori</CardTitle>
-						<CardDescription className="text-gray-400">Total stok per kategori</CardDescription>
+						<CardTitle>Distribusi Stok per Kategori</CardTitle>
+						<CardDescription>Total stok per kategori</CardDescription>
 					</CardHeader>
 					<CardContent>
 						{categoryPieData.length > 0 ? (
@@ -182,8 +181,8 @@ const ProductsStockPageComponent = () => {
 				</Card>
 			</div>
 
-			<div className="grid gap-4 md:grid-cols-2">
-				<Card className="shadow-card border-0 bg-card/50 backdrop-blur-sm">
+			<div className="grid gap-6 md:grid-cols-2">
+				<Card className="card-premium border-none shadow-soft">
 					<CardHeader>
 						<CardTitle>Top Produk Berdasarkan Stok</CardTitle>
 						<CardDescription>10 produk dengan stok tertinggi</CardDescription>
@@ -209,7 +208,7 @@ const ProductsStockPageComponent = () => {
 					</CardContent>
 				</Card>
 
-				<Card className="shadow-card border-0 bg-card/50 backdrop-blur-sm">
+				<Card className="card-premium border-none shadow-soft">
 					<CardHeader>
 						<CardTitle>Top Produk Berdasarkan Terjual</CardTitle>
 						<CardDescription>10 produk dengan penjualan tertinggi</CardDescription>
@@ -236,7 +235,7 @@ const ProductsStockPageComponent = () => {
 				</Card>
 			</div>
 
-			<Card className="shadow-card border-0 bg-card/50 backdrop-blur-sm">
+			<Card className="card-premium border-none shadow-soft">
 				<CardHeader>
 					<CardTitle>Daftar Produk & Stok</CardTitle>
 					<CardDescription>Klik header Stok/Terjual untuk mengurutkan, klik detail untuk melihat stok dan riwayat</CardDescription>

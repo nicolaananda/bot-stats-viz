@@ -55,7 +55,7 @@ const App = () => (
         <SidebarProvider>
           <div className="flex min-h-screen w-full bg-background font-sans antialiased selection:bg-primary/10 selection:text-primary">
             <DashboardSidebar />
-            <div className="flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out">
+            <div className="flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out md:ml-0">
               <DashboardHeader />
               <main className="flex-1 overflow-x-hidden overflow-y-auto bg-muted/30 p-4 md:p-6 lg:p-8">
                 <div className="mx-auto max-w-7xl space-y-8 animate-in fade-in-50 duration-500 slide-in-from-bottom-4">
