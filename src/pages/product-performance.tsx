@@ -15,7 +15,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { StatsCard } from '@/components/ui/stats-card';
 import { dashboardApi } from '@/services/api';
 import { ProductPerformance } from '@/types/dashboard';
 import {
@@ -32,7 +31,6 @@ import {
   PieChart as RechartsPieChart,
   Cell
 } from 'recharts';
-import { PageContainer } from '@/components/ui/page-container';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
@@ -130,33 +128,79 @@ export default function ProductPerformancePage() {
   }));
 
   return (
-    <PageContainer title="Product Performance" description="Detailed analysis of product sales, profitability, and performance metrics">
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Header */}
+      <div className="p-6 border-b border-gray-800">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Product Performance</h1>
+            <p className="text-gray-400 mt-1">Detailed analysis of product sales, profitability, and performance metrics</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-6 space-y-6">
 
       {/* Summary Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Total Products"
-          value={formatNumber(performance.summary.totalProducts)}
-          icon={Package}
-        />
-        <StatsCard
-          title="Total Revenue"
-          value={formatCurrency(performance.summary.totalRevenue)}
-          icon={DollarSign}
-          trend={{ value: 12.5, isPositive: true }}
-        />
-        <StatsCard
-          title="Total Profit"
-          value={formatCurrency(performance.summary.totalProfit)}
-          icon={TrendingUp}
-          trend={{ value: 8.3, isPositive: true }}
-        />
-        <StatsCard
-          title="Avg Profit Margin"
-          value={formatPercentage(performance.summary.avgProfitMargin)}
-          icon={Target}
-          trend={{ value: 2.1, isPositive: true }}
-        />
+        <Card className="bg-gray-800 border-gray-700">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Total Products</p>
+                <p className="text-2xl font-bold text-white">{formatNumber(performance.summary.totalProducts)}</p>
+              </div>
+              <div className="p-3 bg-blue-500/20 rounded-lg">
+                <Package className="h-6 w-6 text-blue-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gray-800 border-gray-700">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Total Revenue</p>
+                <p className="text-2xl font-bold text-white">{formatCurrency(performance.summary.totalRevenue)}</p>
+                <p className="text-sm text-green-400 mt-1">+12.5%</p>
+              </div>
+              <div className="p-3 bg-green-500/20 rounded-lg">
+                <DollarSign className="h-6 w-6 text-green-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gray-800 border-gray-700">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Total Profit</p>
+                <p className="text-2xl font-bold text-white">{formatCurrency(performance.summary.totalProfit)}</p>
+                <p className="text-sm text-green-400 mt-1">+8.3%</p>
+              </div>
+              <div className="p-3 bg-purple-500/20 rounded-lg">
+                <TrendingUp className="h-6 w-6 text-purple-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gray-800 border-gray-700">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Avg Profit Margin</p>
+                <p className="text-2xl font-bold text-white">{formatPercentage(performance.summary.avgProfitMargin)}</p>
+                <p className="text-sm text-green-400 mt-1">+2.1%</p>
+              </div>
+              <div className="p-3 bg-orange-500/20 rounded-lg">
+                <Target className="h-6 w-6 text-orange-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
@@ -396,6 +440,7 @@ export default function ProductPerformancePage() {
           </div>
         </TabsContent>
       </Tabs>
-    </PageContainer>
+      </div>
+    </div>
   );
 } 

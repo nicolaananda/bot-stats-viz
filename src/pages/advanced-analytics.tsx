@@ -12,11 +12,9 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { StatsCard } from '@/components/ui/stats-card';
 import { Badge } from '@/components/ui/badge';
 import { dashboardApi } from '@/services/api';
 import { AdvancedAnalytics } from '@/types/dashboard';
-import { PageContainer } from '@/components/ui/page-container';
 import {
   BarChart,
   Bar,
@@ -100,40 +98,95 @@ export default function AdvancedAnalyticsPage() {
   }));
 
   return (
-    <PageContainer title="Advanced Analytics" description="Comprehensive business insights and advanced metrics">
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Header */}
+      <div className="p-6 border-b border-gray-800">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Advanced Analytics</h1>
+            <p className="text-gray-400 mt-1">Comprehensive business insights and advanced metrics</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-6 space-y-6">
 
       {/* Overview Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <StatsCard
-          title="Total Users"
-          value={formatNumber(analytics.overview.totalUsers)}
-          icon={Users}
-          trend={{ value: 12.5, isPositive: true }}
-        />
-        <StatsCard
-          title="Total Transactions"
-          value={formatNumber(analytics.overview.totalTransactions)}
-          icon={ShoppingCart}
-          trend={{ value: 8.3, isPositive: true }}
-        />
-        <StatsCard
-          title="Total Revenue"
-          value={formatCurrency(analytics.overview.totalRevenue)}
-          icon={DollarSign}
-          trend={{ value: 15.2, isPositive: true }}
-        />
-        <StatsCard
-          title="Total Profit"
-          value={formatCurrency(analytics.overview.totalProfit)}
-          icon={TrendingUp}
-          trend={{ value: 6.7, isPositive: true }}
-        />
-        <StatsCard
-          title="Avg LTV"
-          value={formatCurrency(analytics.overview.avgLTV)}
-          icon={Target}
-          trend={{ value: 4.2, isPositive: true }}
-        />
+        <Card className="bg-gray-800 border-gray-700">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Total Users</p>
+                <p className="text-2xl font-bold text-white">{formatNumber(analytics.overview.totalUsers)}</p>
+                <p className="text-sm text-green-400 mt-1">+12.5%</p>
+              </div>
+              <div className="p-3 bg-blue-500/20 rounded-lg">
+                <Users className="h-6 w-6 text-blue-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gray-800 border-gray-700">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Total Transactions</p>
+                <p className="text-2xl font-bold text-white">{formatNumber(analytics.overview.totalTransactions)}</p>
+                <p className="text-sm text-green-400 mt-1">+8.3%</p>
+              </div>
+              <div className="p-3 bg-green-500/20 rounded-lg">
+                <ShoppingCart className="h-6 w-6 text-green-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gray-800 border-gray-700">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Total Revenue</p>
+                <p className="text-2xl font-bold text-white">{formatCurrency(analytics.overview.totalRevenue)}</p>
+                <p className="text-sm text-green-400 mt-1">+15.2%</p>
+              </div>
+              <div className="p-3 bg-purple-500/20 rounded-lg">
+                <DollarSign className="h-6 w-6 text-purple-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gray-800 border-gray-700">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Total Profit</p>
+                <p className="text-2xl font-bold text-white">{formatCurrency(analytics.overview.totalProfit)}</p>
+                <p className="text-sm text-green-400 mt-1">+6.7%</p>
+              </div>
+              <div className="p-3 bg-orange-500/20 rounded-lg">
+                <TrendingUp className="h-6 w-6 text-orange-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gray-800 border-gray-700">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Avg LTV</p>
+                <p className="text-2xl font-bold text-white">{formatCurrency(analytics.overview.avgLTV)}</p>
+                <p className="text-sm text-green-400 mt-1">+4.2%</p>
+              </div>
+              <div className="p-3 bg-pink-500/20 rounded-lg">
+                <Target className="h-6 w-6 text-pink-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
@@ -383,6 +436,7 @@ export default function AdvancedAnalyticsPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </PageContainer>
+      </div>
+    </div>
   );
 } 

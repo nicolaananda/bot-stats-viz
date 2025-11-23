@@ -1,4 +1,4 @@
-import { Bell, Search, User } from "lucide-react";
+import { Bell, Search, User, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,65 +11,60 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
 
 export function DashboardHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-      <div className="flex h-16 items-center px-4 md:px-6 gap-3 md:gap-4">
-        <SidebarTrigger className="mr-1 md:mr-2" />
-        
-        {/* Search
-        <div className="flex-1 max-w-md">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search transactions, users..."
-              className="pl-10 bg-muted/50 border-0 focus-visible:ring-1"
-            />
-          </div>
-        </div> */}
+    <header className="sticky top-0 z-40 w-full">
+      <div className="flex h-16 items-center px-4 md:px-6 gap-3 md:gap-4 bg-background/50 backdrop-blur-sm transition-all duration-300">
+        <SidebarTrigger className="mr-1 md:mr-2 text-muted-foreground hover:text-primary transition-colors" />
+
+        {/* Breadcrumbs or Page Title could go here */}
+        <div className="hidden md:flex items-center text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">Dashboard</span>
+          <span className="mx-2">/</span>
+          <span>Overview</span>
+        </div>
 
         {/* Header Actions */}
-        <div className="ml-auto flex items-center gap-1 md:gap-2">
-          {/* Notifications
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-4 w-4" />
-            <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full text-[10px] flex items-center justify-center text-white">
-              3
-            </span>
-          </Button> */}
+        <div className="ml-auto flex items-center gap-2 md:gap-4">
+          <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full transition-colors">
+            <Bell className="h-5 w-5" />
+            <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-destructive ring-2 ring-background animate-pulse" />
+          </Button>
 
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-accent">
-                <Avatar className="h-10 w-10 ring-1 ring-border/60">
+              <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-transparent p-0">
+                <Avatar className="h-10 w-10 ring-2 ring-background shadow-sm transition-transform hover:scale-105">
                   <AvatarImage src="/avatars/01.png" alt="@admin" />
-                  <AvatarFallback className="bg-gradient-primary text-white">
-                    AD
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-white font-bold">
+                    RF
                   </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
+            <DropdownMenuContent className="w-56 bg-card/95 backdrop-blur-xl border-border/50 shadow-xl rounded-xl" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal p-3">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">Admin User</p>
+                  <p className="text-sm font-semibold leading-none text-foreground">Rizal Fakhri</p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    admin@dashboard.com
+                    rizalfakhri@yayan.il
                   </p>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem disabled>
+              <DropdownMenuSeparator className="bg-border/50" />
+              <DropdownMenuItem className="cursor-pointer focus:bg-primary/10 focus:text-primary rounded-lg my-1">
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </DropdownMenuItem>
-              <DropdownMenuItem disabled>
-                Settings
+              <DropdownMenuItem className="cursor-pointer focus:bg-primary/10 focus:text-primary rounded-lg my-1">
+                <Menu className="mr-2 h-4 w-4" />
+                <span>Settings</span>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem disabled className="text-destructive">
+              <DropdownMenuSeparator className="bg-border/50" />
+              <DropdownMenuItem className="cursor-pointer focus:bg-destructive/10 focus:text-destructive text-destructive rounded-lg my-1">
                 Log out
               </DropdownMenuItem>
             </DropdownMenuContent>

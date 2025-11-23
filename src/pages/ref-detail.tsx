@@ -17,10 +17,12 @@ export default function RefDetailPage() {
 
 	if (isLoading) {
 		return (
-			<div className="flex items-center justify-center min-h-[300px]">
-				<div className="text-center">
-					<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-					<p className="text-muted-foreground">Memuat data reference ID...</p>
+			<div className="min-h-screen bg-gray-900 text-white">
+				<div className="flex items-center justify-center min-h-[300px]">
+					<div className="text-center">
+						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+						<p className="text-gray-400">Memuat data reference ID...</p>
+					</div>
 				</div>
 			</div>
 		);
@@ -28,11 +30,13 @@ export default function RefDetailPage() {
 
 	if (error || !data) {
 		return (
-			<div className="p-6">
-				<Button variant="ghost" className="mb-4" onClick={() => navigate(-1)}>
-					<ArrowLeft className="h-4 w-4 mr-2" /> Kembali
-				</Button>
-				<p className="text-destructive">Gagal memuat detail reference ID.</p>
+			<div className="min-h-screen bg-gray-900 text-white">
+				<div className="p-6">
+					<Button variant="ghost" className="mb-4 text-gray-400 hover:bg-gray-700 hover:text-white" onClick={() => navigate(-1)}>
+						<ArrowLeft className="h-4 w-4 mr-2" /> Kembali
+					</Button>
+					<p className="text-red-400">Gagal memuat detail reference ID.</p>
+				</div>
 			</div>
 		);
 	}
@@ -40,39 +44,44 @@ export default function RefDetailPage() {
 	const safeRef = data.reffId;
 
 	return (
-		<div className="flex-1 space-y-6 p-6">
-			<div className="flex items-center justify-between">
-				<div className="flex items-center gap-3">
-					<Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-						<ArrowLeft className="h-4 w-4 mr-2" /> Back
-					</Button>
-					<div>
-						<h2 className="text-3xl font-bold tracking-tight bg-gradient-primary bg-clip-text text-transparent">Reference ID</h2>
-						<p className="text-muted-foreground">Detail referensi transaksi</p>
+		<div className="min-h-screen bg-gray-900 text-white">
+			{/* Header */}
+			<div className="p-6 border-b border-gray-800">
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-3">
+						<Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="text-gray-400 hover:bg-gray-700 hover:text-white">
+							<ArrowLeft className="h-4 w-4 mr-2" /> Back
+						</Button>
+						<div>
+							<h2 className="text-3xl font-bold tracking-tight text-white">Reference ID</h2>
+							<p className="text-gray-400">Detail referensi transaksi</p>
+						</div>
 					</div>
 				</div>
 			</div>
 
-			<Card className="shadow-card border-0 bg-card/50 backdrop-blur-sm">
-				<CardHeader>
-					<CardTitle>{safeRef}</CardTitle>
-					<CardDescription>Informasi transaksi</CardDescription>
-				</CardHeader>
-				<CardContent className="grid gap-4 md:grid-cols-2">
-					<div className="space-y-1">
-						<p><span className="text-muted-foreground">User:</span> {data.user}</p>
-						<p><span className="text-muted-foreground">Produk:</span> {data.produk} ({data.idProduk})</p>
-						<p><span className="text-muted-foreground">Tanggal:</span> {new Date(data.tanggal).toLocaleString()}</p>
-						<p><span className="text-muted-foreground">Metode:</span> {data.metodeBayar || data.payment_method}</p>
-					</div>
-					<div className="space-y-1">
-						<p><span className="text-muted-foreground">Harga:</span> {data.harga?.toLocaleString('id-ID')}</p>
-						<p><span className="text-muted-foreground">Jumlah:</span> {data.jumlah}</p>
-						<p><span className="text-muted-foreground">Total:</span> {data.totalBayar?.toLocaleString('id-ID')}</p>
-						<p><span className="text-muted-foreground">Profit:</span> {data.profit?.toLocaleString('id-ID')}</p>
-					</div>
-				</CardContent>
-			</Card>
+			<div className="p-6 space-y-6">
+				<Card className="bg-gray-800 border-gray-700">
+					<CardHeader>
+						<CardTitle className="text-white">{safeRef}</CardTitle>
+						<CardDescription className="text-gray-400">Informasi transaksi</CardDescription>
+					</CardHeader>
+					<CardContent className="grid gap-4 md:grid-cols-2">
+						<div className="space-y-1">
+							<p><span className="text-gray-400">User:</span> <span className="text-white">{data.user}</span></p>
+							<p><span className="text-gray-400">Produk:</span> <span className="text-white">{data.produk} ({data.idProduk})</span></p>
+							<p><span className="text-gray-400">Tanggal:</span> <span className="text-white">{new Date(data.tanggal).toLocaleString()}</span></p>
+							<p><span className="text-gray-400">Metode:</span> <span className="text-white">{data.metodeBayar || data.payment_method}</span></p>
+						</div>
+						<div className="space-y-1">
+							<p><span className="text-gray-400">Harga:</span> <span className="text-white">{data.harga?.toLocaleString('id-ID')}</span></p>
+							<p><span className="text-gray-400">Jumlah:</span> <span className="text-white">{data.jumlah}</span></p>
+							<p><span className="text-gray-400">Total:</span> <span className="text-white">{data.totalBayar?.toLocaleString('id-ID')}</span></p>
+							<p><span className="text-gray-400">Profit:</span> <span className="text-white">{data.profit?.toLocaleString('id-ID')}</span></p>
+						</div>
+					</CardContent>
+				</Card>
+			</div>
 		</div>
 	);
 } 

@@ -9,9 +9,8 @@ import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { ChevronUp, ChevronDown } from 'lucide-react';
-import { PageContainer } from '@/components/ui/page-container';
 
-const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 const ProductsStockPageComponent = () => {
 	const navigate = useNavigate();
@@ -102,26 +101,39 @@ const ProductsStockPageComponent = () => {
 
 	if (stockLoading) {
 		return (
-			<div className="flex items-center justify-center min-h-[400px]">
-				<div className="text-center">
-					<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-					<p className="text-muted-foreground">Memuat data stok...</p>
+			<div className="min-h-screen bg-gray-900 text-white">
+				<div className="flex items-center justify-center min-h-[400px]">
+					<div className="text-center">
+						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+						<p className="text-gray-400">Memuat data stok...</p>
+					</div>
 				</div>
 			</div>
 		);
 	}
 
 	return (
-		<PageContainer title="Manajemen Produk" description="Visualisasi dan pemantauan stok produk">
-			<div className="flex items-center justify-end">
-				<Button variant="secondary" onClick={() => dashboardApi.exportStockCSV()}>Export CSV</Button>
+		<div className="min-h-screen bg-gray-900 text-white">
+			{/* Header */}
+			<div className="p-6 border-b border-gray-800">
+				<div className="flex items-center justify-between">
+					<div>
+						<h1 className="text-2xl font-bold text-white">Manajemen Produk</h1>
+						<p className="text-gray-400 mt-1">Visualisasi dan pemantauan stok produk</p>
+					</div>
+					<Button variant="secondary" onClick={() => dashboardApi.exportStockCSV()} className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700">
+						Export CSV
+					</Button>
+				</div>
 			</div>
 
+			<div className="p-6 space-y-6">
+
 			<div className="grid gap-4 md:grid-cols-3">
-				<Card className="shadow-card border-0 bg-card/50 backdrop-blur-sm">
+				<Card className="bg-gray-800 border-gray-700">
 					<CardHeader>
-						<CardTitle>Ringkasan Stok</CardTitle>
-						<CardDescription>Status stok saat ini</CardDescription>
+						<CardTitle className="text-white">Ringkasan Stok</CardTitle>
+						<CardDescription className="text-gray-400">Status stok saat ini</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-2">
 						<p>Total Produk: <span className="font-medium">{summary?.totalProducts ?? stock?.totalProducts ?? 0}</span></p>
@@ -132,10 +144,10 @@ const ProductsStockPageComponent = () => {
 				</Card>
 
 				{/* Visualizations */}
-				<Card className="shadow-card border-0 bg-card/50 backdrop-blur-sm md:col-span-2">
+				<Card className="bg-gray-800 border-gray-700 md:col-span-2">
 					<CardHeader>
-						<CardTitle>Distribusi Stok per Kategori</CardTitle>
-						<CardDescription>Total stok per kategori</CardDescription>
+						<CardTitle className="text-white">Distribusi Stok per Kategori</CardTitle>
+						<CardDescription className="text-gray-400">Total stok per kategori</CardDescription>
 					</CardHeader>
 					<CardContent>
 						{categoryPieData.length > 0 ? (
@@ -324,7 +336,8 @@ const ProductsStockPageComponent = () => {
 					</CardContent>
 				</Card>
 			)} */}
-		</PageContainer>
+			</div>
+		</div>
 	);
 };
 

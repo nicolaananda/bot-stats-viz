@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Package, Plus, Trash2, Edit, MoreHorizontal, ArrowLeft } from "lucide-react";
+import { Package, Plus, Trash2, Edit, MoreHorizontal, ArrowLeft, ShoppingCart, Tag, AlertCircle, CheckCircle2, Box } from "lucide-react";
 import { dashboardApi } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { StockManagementDialog } from "@/components/stock-management-dialog";
 import { BulkDeleteDialog } from "@/components/bulk-delete-dialog";
-import { PageContainer } from "@/components/ui/page-container";
+import { cn } from "@/lib/utils";
 
 interface EditingStock {
   index: number;
@@ -35,7 +35,7 @@ export default function ProductDetailPage() {
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [editingStock, setEditingStock] = useState<EditingStock | null>(null);
 
-  // Fetch product details - FIXED: Use correct API function
+  // Fetch product details
   const { data: details, isLoading, error } = useQuery({
     queryKey: ["product-details", productId],
     queryFn: () => dashboardApi.getProductStockDetails(productId!),
@@ -64,17 +64,13 @@ export default function ProductDetailPage() {
       return dashboardApi.updateProductStock(productId!, { action: 'add', stockItems: items, notes });
     },
     onSuccess: (result) => {
-      console.log("✅ Add stock success:", result);
       toast({
         title: "Stock Added Successfully",
         description: `New stock count: ${result.newStockCount}`,
       });
-      // Force refresh the query
       queryClient.invalidateQueries({ queryKey: ["product-details", productId] });
-      queryClient.refetchQueries({ queryKey: ["product-details", productId] });
     },
     onError: (error: any) => {
-      console.error("❌ Add stock error:", error);
       toast({
         title: "Failed to Add Stock",
         description: error.message || "An error occurred while adding stock",
@@ -96,23 +92,18 @@ export default function ProductDetailPage() {
         return Promise.reject(new Error('Email and password are required'));
       }
 
-      // Sanitize pipes inside fields to avoid breaking the format
       const sanitize = (v: string) => v.replace(/\|/g, '/');
       const raw = [email, password, profile, pin, notes].map(sanitize).join('|');
       return dashboardApi.editStockItem(productId!, { index, value: raw });
     },
     onSuccess: () => {
-      console.log("✅ Edit stock success");
       toast({
         title: "Stock Updated Successfully",
         description: `Stock item has been updated`,
       });
-      // Force refresh the query
       queryClient.invalidateQueries({ queryKey: ["product-details", productId] });
-      queryClient.refetchQueries({ queryKey: ["product-details", productId] });
     },
     onError: (error: any) => {
-      console.error("❌ Edit stock error:", error);
       toast({
         title: "Failed to Update Stock",
         description: error.message || "An error occurred while updating stock",
@@ -124,17 +115,13 @@ export default function ProductDetailPage() {
   const deleteStockMutation = useMutation({
     mutationFn: (index: number) => dashboardApi.deleteStockItem(productId!, { index }),
     onSuccess: () => {
-      console.log("✅ Delete stock success");
       toast({
         title: "Stock Deleted Successfully",
         description: `Stock item has been deleted`,
       });
-      // Force refresh the query
       queryClient.invalidateQueries({ queryKey: ["product-details", productId] });
-      queryClient.refetchQueries({ queryKey: ["product-details", productId] });
     },
     onError: (error: any) => {
-      console.error("❌ Delete stock error:", error);
       toast({
         title: "Failed to Delete Stock",
         description: error.message || "An error occurred while deleting stock",
@@ -146,17 +133,13 @@ export default function ProductDetailPage() {
   const bulkDeleteMutation = useMutation({
     mutationFn: (data: any) => dashboardApi.deleteMultipleStock(productId!, data),
     onSuccess: (result) => {
-      console.log("✅ Bulk delete success:", result);
       toast({
         title: "Stock Deleted Successfully",
         description: `Deleted ${result.deletedItemsCount || 1} stock items from ${result.productName}`,
       });
-      // Force refresh the query
       queryClient.invalidateQueries({ queryKey: ["product-details", productId] });
-      queryClient.refetchQueries({ queryKey: ["product-details", productId] });
     },
     onError: (error: any) => {
-      console.error("❌ Bulk delete error:", error);
       toast({
         title: "Failed to Delete Stock",
         description: error.message || "An error occurred while deleting stock",
@@ -167,11 +150,10 @@ export default function ProductDetailPage() {
 
   // Handler functions
   const handleAddStock = async (data: any) => {
-    console.log("🔍 Adding stock:", data);
     try {
       await addStockMutation.mutateAsync(data);
     } catch (error) {
-      console.error("❌ Add stock failed:", error);
+      console.error("Add stock failed:", error);
     }
   };
 
@@ -193,43 +175,43 @@ export default function ProductDetailPage() {
   };
 
   const handleUpdateStock = async (data: any) => {
-    console.log("🔍 Updating stock:", data);
     if (editingStock) {
       try {
         await editStockMutation.mutateAsync({ index: editingStock.index, data });
         setEditingStock(null);
       } catch (error) {
-        console.error("❌ Update stock failed:", error);
+        console.error("Update stock failed:", error);
       }
     }
   };
 
   const handleDeleteStock = async (index: number) => {
     if (confirm("Are you sure you want to delete this stock item?")) {
-      console.log("🔍 Deleting stock at index:", index);
       try {
         await deleteStockMutation.mutateAsync(index);
       } catch (error) {
-        console.error("❌ Delete stock failed:", error);
+        console.error("Delete stock failed:", error);
       }
     }
   };
 
   const handleBulkDelete = async (data: any) => {
-    console.log("🔍 Bulk deleting stock:", data);
     try {
       await bulkDeleteMutation.mutateAsync(data);
     } catch (error) {
-      console.error("❌ Bulk delete failed:", error);
+      console.error("Bulk delete failed:", error);
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading product details...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="relative w-16 h-16 mx-auto">
+            <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+          </div>
+          <p className="text-muted-foreground font-medium animate-pulse">Loading product details...</p>
         </div>
       </div>
     );
@@ -237,11 +219,14 @@ export default function ProductDetailPage() {
 
   if (error || !details) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <p className="text-red-500 mb-4">Error loading product details</p>
-          <Button onClick={() => navigate("/products")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6 bg-destructive/5 rounded-2xl border border-destructive/20">
+          <h3 className="text-lg font-bold text-destructive mb-2">Error loading product details</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Product ID: {productId}<br />
+            Error: {error?.message || 'Product not found'}
+          </p>
+          <Button onClick={() => navigate('/products')} variant="outline">
             Back to Products
           </Button>
         </div>
@@ -250,52 +235,90 @@ export default function ProductDetailPage() {
   }
 
   return (
-    <PageContainer title={details.productName} description={details.description}>
-      {/* Header actions */}
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" onClick={() => navigate("/products")}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Products
-        </Button>
-        <Badge variant="outline" className="text-sm">
-          {details.category}
-        </Badge>
+    <div className="min-h-screen bg-muted/30 p-4 md:p-8 space-y-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 text-muted-foreground mb-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/products')}
+              className="h-auto p-0 hover:bg-transparent hover:text-primary"
+            >
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Products
+            </Button>
+            <span>/</span>
+            <span>Details</span>
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">{details.productName}</h1>
+          <p className="text-muted-foreground mt-1">{details.description}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="bg-background/50 backdrop-blur-sm px-3 py-1 text-sm font-medium">
+            <Tag className="h-3.5 w-3.5 mr-1.5 text-primary" />
+            {details.category}
+          </Badge>
+          <Badge
+            variant={details.stock?.status === "good" ? "default" : "destructive"}
+            className={cn(
+              "px-3 py-1 text-sm font-medium",
+              details.stock?.status === "good"
+                ? "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-emerald-500/20"
+                : "bg-red-500/10 text-red-600 hover:bg-red-500/20 border-red-500/20"
+            )}
+          >
+            {details.stock?.status === "good" ? (
+              <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+            ) : (
+              <AlertCircle className="h-3.5 w-3.5 mr-1.5" />
+            )}
+            {details.stock?.status === "good" ? "In Stock" : "Low Stock"}
+          </Badge>
+        </div>
       </div>
 
-      {/* Product Info */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Sales</CardTitle>
+        {/* Stats Cards */}
+        <Card className="card-premium border-none shadow-soft">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Sales</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{details.sales?.total || 0}</div>
-            <p className="text-sm text-muted-foreground">Total sales</p>
+            <div className="flex items-center justify-between">
+              <div className="text-2xl font-bold text-foreground">{details.sales?.total || 0}</div>
+              <div className="p-2 bg-blue-500/10 rounded-lg">
+                <ShoppingCart className="h-5 w-5 text-blue-500" />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Stock Status</CardTitle>
+        <Card className="card-premium border-none shadow-soft">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Available Stock</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalStockCount}</div>
-            <p className="text-sm text-muted-foreground">
-              {details.stock?.status === "good" ? "Good" : "Low stock"}
-            </p>
+            <div className="flex items-center justify-between">
+              <div className="text-2xl font-bold text-foreground">{totalStockCount}</div>
+              <div className={cn("p-2 rounded-lg", totalStockCount > 0 ? "bg-emerald-500/10" : "bg-red-500/10")}>
+                <Package className={cn("h-5 w-5", totalStockCount > 0 ? "text-emerald-500" : "text-red-500")} />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Prices</CardTitle>
+        <Card className="card-premium border-none shadow-soft">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Pricing Tiers</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               {details.prices && Object.entries(details.prices).map(([tier, price]) => (
-                <div key={tier} className="flex justify-between text-sm">
-                  <span className="capitalize">{tier}:</span>
-                  <span>Rp {Number(price).toLocaleString()}</span>
+                <div key={tier} className="flex justify-between text-sm items-center">
+                  <span className="capitalize text-muted-foreground">{tier}</span>
+                  <span className="font-medium text-foreground">Rp {Number(price).toLocaleString()}</span>
                 </div>
               ))}
             </div>
@@ -304,28 +327,29 @@ export default function ProductDetailPage() {
       </div>
 
       {/* Stock Management */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
+      <Card className="card-premium border-none shadow-soft">
+        <CardHeader className="border-b border-border/50 bg-muted/30">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
+                <Box className="h-5 w-5 text-primary" />
                 Stock Management
               </CardTitle>
-              <CardDescription>
-                Manage stock items for this product. Total: {totalStockCount} items
+              <CardDescription className="mt-1">
+                Manage inventory items for this product. Total: {totalStockCount} items
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button onClick={() => setAddStockOpen(true)} size="sm">
+              <Button onClick={() => setAddStockOpen(true)} size="sm" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Stock
               </Button>
               {totalStockCount > 0 && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => setBulkDeleteOpen(true)}
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Bulk Delete
@@ -334,11 +358,16 @@ export default function ProductDetailPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {totalStockCount === 0 ? (
-            <div className="text-center py-8">
-              <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground mb-4">No stock items available</p>
+            <div className="text-center py-16">
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                <Package className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-medium text-foreground mb-1">No stock items available</h3>
+              <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                This product currently has no inventory. Add stock items to make it available for purchase.
+              </p>
               <Button onClick={() => setAddStockOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add First Stock Item
@@ -347,43 +376,51 @@ export default function ProductDetailPage() {
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Index</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Password</TableHead>
+                <TableHeader className="bg-muted/50">
+                  <TableRow className="hover:bg-transparent border-border/50">
+                    <TableHead className="w-[80px]">Index</TableHead>
+                    <TableHead>Email / Account</TableHead>
+                    <TableHead>Password / Key</TableHead>
                     <TableHead>Profile</TableHead>
                     <TableHead>PIN</TableHead>
                     <TableHead>Notes</TableHead>
-                    <TableHead className="w-[100px]">Actions</TableHead>
+                    <TableHead className="w-[80px] text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {stockItems.map((item, idx) => (
-                    <TableRow key={idx}>
-                      <TableCell className="font-mono text-sm">{idx}</TableCell>
-                      <TableCell>{item.parsed?.email || "-"}</TableCell>
-                      <TableCell className="font-mono">{item.parsed?.password || "-"}</TableCell>
-                      <TableCell>{item.parsed?.profile || "-"}</TableCell>
-                      <TableCell>{item.parsed?.pin || "-"}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">
+                    <TableRow key={idx} className="hover:bg-muted/30 border-border/50 transition-colors">
+                      <TableCell>
+                        <code className="text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground border border-border">
+                          #{idx}
+                        </code>
+                      </TableCell>
+                      <TableCell className="font-medium">{item.parsed?.email || "-"}</TableCell>
+                      <TableCell>
+                        <code className="text-xs bg-muted/50 px-1.5 py-0.5 rounded text-muted-foreground font-mono">
+                          {item.parsed?.password || "-"}
+                        </code>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">{item.parsed?.profile || "-"}</TableCell>
+                      <TableCell className="text-muted-foreground text-sm">{item.parsed?.pin || "-"}</TableCell>
+                      <TableCell className="max-w-[200px] truncate text-muted-foreground text-sm">
                         {item.parsed?.notes || "-"}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" className="w-40">
                             <DropdownMenuItem onClick={() => handleEditStock(idx)}>
                               <Edit className="h-4 w-4 mr-2" />
                               Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => handleDeleteStock(idx)}
-                              className="text-red-600"
+                              className="text-destructive focus:text-destructive focus:bg-destructive/10"
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
                               Delete
@@ -427,6 +464,6 @@ export default function ProductDetailPage() {
         onSubmit={handleBulkDelete}
         isLoading={bulkDeleteMutation.isPending}
       />
-    </PageContainer>
+    </div>
   );
 }

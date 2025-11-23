@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Download, CreditCard, Filter, Eye, FileText, User, Smartphone, Copy, Check } from 'lucide-react';
+import { Search, Download, CreditCard, Filter, Eye, FileText, User, Smartphone, Copy, Check, ArrowUpRight, ArrowDownRight, Calendar } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -15,11 +15,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { StatsCard } from '@/components/ui/stats-card';
 import { dashboardApi } from '@/services/api';
 import { formatCurrency, getTransactionUserName, getTransactionPaymentMethod, getPaymentMethodBadge, getTransactionReferenceId } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { PageContainer } from '@/components/ui/page-container';
+import { cn } from '@/lib/utils';
 
 export default function TransactionsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,9 +32,12 @@ export default function TransactionsPage() {
   const [isCopied, setIsCopied] = useState(false);
   const { toast } = useToast();
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+
   const { data: recentTransactions, isLoading } = useQuery({
     queryKey: ['recent-transactions'],
-    queryFn: () => dashboardApi.getRecentTransactions(50),
+    queryFn: () => dashboardApi.getRecentTransactions(1000),
   });
 
   const { data: overview } = useQuery({
@@ -68,7 +70,7 @@ export default function TransactionsPage() {
               seenRefIds.add(refId);
             }
           }
-        } catch (_) {}
+        } catch (_) { }
 
         // Local filter on recent transactions for partial matches (ref id, user, name, payment)
         const localMatches = recentTransactions?.transactions?.filter((t: any) => {
@@ -95,8 +97,6 @@ export default function TransactionsPage() {
       } catch (error) {
         setSearchResults(null);
         setShowSearchResults(false);
-
-
       }
       setIsSearching(false);
     }, 300),
@@ -118,17 +118,17 @@ export default function TransactionsPage() {
     setIsLoadingReceipt(true);
     try {
       const transaction = await dashboardApi.searchTransaction(reffId);
-      
+
       // Update transaction details
       setSelectedDetail(transaction);
-      
+
       // Set receipt content if available (now included in transaction response)
       if (transaction.receiptExists && transaction.receiptContent) {
         setReceiptContent(transaction.receiptContent);
       } else {
         setReceiptContent('Receipt not available - This transaction may not have generated a receipt yet.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch transaction with receipt:', error);
       if (error.response?.status === 404) {
         setReceiptContent('Transaction not found');
@@ -162,7 +162,7 @@ export default function TransactionsPage() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
+
       toast({
         title: "Download Successful",
         description: `Receipt ${reffId}.txt has been downloaded`,
@@ -180,7 +180,7 @@ export default function TransactionsPage() {
   // Copy receipt content to clipboard
   const copyReceiptContent = async () => {
     if (!receiptContent) return;
-    
+
     try {
       await navigator.clipboard.writeText(receiptContent);
       setIsCopied(true);
@@ -188,7 +188,7 @@ export default function TransactionsPage() {
         title: "Copied to Clipboard",
         description: "Account information has been copied to clipboard",
       });
-      
+
       // Reset copied state after 2 seconds
       setTimeout(() => {
         setIsCopied(false);
@@ -238,76 +238,146 @@ export default function TransactionsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-300 mx-auto mb-4"></div>
-          <p className="text-slate-500">Loading transactions...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="relative w-16 h-16 mx-auto">
+            <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+          </div>
+          <p className="text-muted-foreground font-medium animate-pulse">Loading transactions...</p>
         </div>
       </div>
     );
   }
 
+  // Filter transactions based on search
+  const filteredTransactions = recentTransactions?.transactions?.filter((transaction: any) => {
+    if (!searchTerm.trim()) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      getTransactionReferenceId(transaction).toLowerCase().includes(searchLower) ||
+      getTransactionUserName(transaction).toLowerCase().includes(searchLower) ||
+      transaction.name.toLowerCase().includes(searchLower) ||
+      getTransactionPaymentMethod(transaction).toLowerCase().includes(searchLower)
+    );
+  }) || [];
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentTransactions = filteredTransactions.slice(startIndex, endIndex);
+
+  // Reset page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   return (
-    <PageContainer title="Transactions" description="Search transactions, view details, and export data">
-      <div className="flex items-center justify-end gap-2">
-        <Button
-          onClick={() => handleExport('json')}
-          variant="outline"
-          className="flex items-center gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
-        >
-          <Download className="h-4 w-4" />
-          Export JSON
-        </Button>
-        <Button
-          onClick={() => handleExport('csv')}
-          variant="outline"
-          className="flex items-center gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
-        >
-          <Download className="h-4 w-4" />
-          Export CSV
-        </Button>
+    <div className="min-h-screen bg-muted/30 p-4 md:p-8 space-y-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Transactions</h1>
+          <p className="text-muted-foreground mt-1">Search transactions, view details, and export data</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => handleExport('json')}
+            variant="outline"
+            className="bg-background/50 backdrop-blur-sm"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Export JSON
+          </Button>
+          <Button
+            onClick={() => handleExport('csv')}
+            variant="outline"
+            className="bg-background/50 backdrop-blur-sm"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Total Transactions"
-          value={ov?.totalTransaksi || 0}
-          icon={CreditCard}
-          className="hover:scale-105 bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-900/20 dark:to-gray-900/20"
-        />
-        <StatsCard
-          title="Total Revenue"
-          value={formatCurrency(ov?.totalPendapatan || 0)}
-          icon={CreditCard}
-          className="hover:scale-105 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20"
-        />
-        <StatsCard
-          title="Today's Transactions"
-          value={ov?.transaksiHariIni || 0}
-          change={`${formatCurrency(ov?.pendapatanHariIni || 0)} revenue`}
-          changeType="positive"
-          icon={CreditCard}
-          className="hover:scale-105 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20"
-        />
-        <StatsCard
-          title="Payment Methods"
-          value={`${ov?.metodeBayar?.saldo || 0} + ${ov?.metodeBayar?.qris || 0}`}
-          change="Active methods"
-          changeType="neutral"
-          icon={CreditCard}
-          className="hover:scale-105 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20"
-        />
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="card-premium border-none shadow-soft">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Transactions</p>
+                <h3 className="text-2xl font-bold mt-2 text-foreground">{ov?.totalTransaksi || 0}</h3>
+                <div className="flex items-center mt-1 text-xs font-medium text-emerald-500">
+                  <ArrowUpRight className="h-3 w-3 mr-1" />
+                  +12.5% vs last month
+                </div>
+              </div>
+              <div className="p-3 bg-blue-500/10 rounded-xl">
+                <CreditCard className="h-6 w-6 text-blue-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="card-premium border-none shadow-soft">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
+                <h3 className="text-2xl font-bold mt-2 text-foreground">{formatCurrency(ov?.totalPendapatan || 0)}</h3>
+                <div className="flex items-center mt-1 text-xs font-medium text-emerald-500">
+                  <ArrowUpRight className="h-3 w-3 mr-1" />
+                  +8.2% vs last month
+                </div>
+              </div>
+              <div className="p-3 bg-emerald-500/10 rounded-xl">
+                <CreditCard className="h-6 w-6 text-emerald-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="card-premium border-none shadow-soft">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Today's Transactions</p>
+                <h3 className="text-2xl font-bold mt-2 text-foreground">{ov?.transaksiHariIni || 0}</h3>
+                <p className="text-xs text-muted-foreground mt-1">{formatCurrency(ov?.pendapatanHariIni || 0)} revenue</p>
+              </div>
+              <div className="p-3 bg-purple-500/10 rounded-xl">
+                <CreditCard className="h-6 w-6 text-purple-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="card-premium border-none shadow-soft">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Payment Methods</p>
+                <h3 className="text-2xl font-bold mt-2 text-foreground">{`${ov?.metodeBayar?.saldo || 0} + ${ov?.metodeBayar?.qris || 0}`}</h3>
+                <p className="text-xs text-muted-foreground mt-1">Active methods</p>
+              </div>
+              <div className="p-3 bg-orange-500/10 rounded-xl">
+                <CreditCard className="h-6 w-6 text-orange-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Unified Live Search */}
-      <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm border border-slate-100">
-        <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-t-lg">
-          <CardTitle className="flex items-center gap-2 text-slate-700">
-            <Search className="h-5 w-5 text-slate-500" />
+      <Card className="card-premium border-none shadow-soft overflow-hidden">
+        <CardHeader className="bg-muted/50 border-b border-border/50">
+          <CardTitle className="flex items-center gap-2">
+            <Search className="h-5 w-5 text-primary" />
             Live Search
           </CardTitle>
-          <CardDescription className="text-slate-500">
+          <CardDescription>
             Search by reference ID, user name, product name, or payment method - results appear as you type
           </CardDescription>
         </CardHeader>
@@ -315,36 +385,34 @@ export default function TransactionsPage() {
           <div className="space-y-4">
             {/* Search Input */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Type reference ID (e.g., REF123456), user name, product, or payment method..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-slate-200 focus:border-slate-400 focus:ring-slate-400"
+                className="pl-10 bg-background/50 border-border/50 focus:bg-background transition-colors"
               />
               {isSearching && (
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-400"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
                 </div>
               )}
             </div>
 
-            {/* Do not render results list here to avoid stacking with the table */}
-
             {/* No Results Message */}
             {searchTerm.trim() && searchResults && searchResults.length === 0 && !isSearching && (
-              <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
-                <Search className="h-8 w-8 mx-auto text-slate-400 mb-2" />
-                <p className="text-slate-600">No results found for "{searchTerm}"</p>
-                <p className="text-sm text-slate-500">Try a different search term</p>
+              <div className="mt-4 p-4 bg-muted/30 rounded-xl border border-border/50 text-center">
+                <Search className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                <p className="text-foreground font-medium">No results found for "{searchTerm}"</p>
+                <p className="text-sm text-muted-foreground">Try a different search term</p>
               </div>
             )}
 
             {/* Search Tips */}
             {!searchTerm.trim() && (
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="text-sm text-blue-700">
-                  💡 <strong>Live Search Tips:</strong> Start typing to search instantly. 
+              <div className="mt-4 p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                <p className="text-sm text-blue-600 dark:text-blue-400">
+                  💡 <strong>Live Search Tips:</strong> Start typing to search instantly.
                   Search by transaction reference ID, user name, product, or payment method.
                 </p>
               </div>
@@ -355,358 +423,432 @@ export default function TransactionsPage() {
 
       {/* Recent Transactions Table - Hidden only when a detail is opened */}
       {!isDetailOpen && (
-        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm border border-slate-100">
-          <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-t-lg">
-            <CardTitle className="text-slate-700">Recent Transactions</CardTitle>
-            <CardDescription className="text-slate-500">
-              Latest {recentTransactions?.limit || 0} transactions from your WhatsApp bot
-            </CardDescription>
+        <Card className="card-premium border-none shadow-soft overflow-hidden">
+          <CardHeader className="bg-muted/50 border-b border-border/50 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Recent Transactions</CardTitle>
+              <CardDescription>
+                Showing {startIndex + 1}-{Math.min(endIndex, filteredTransactions.length)} of {filteredTransactions.length} transactions
+              </CardDescription>
+            </div>
+            {/* Pagination Controls */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="h-8 w-8 p-0"
+              >
+                &lt;
+              </Button>
+              <span className="text-sm font-medium">
+                Page {currentPage} of {totalPages || 1}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="h-8 w-8 p-0"
+              >
+                &gt;
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent className="pt-6">
-            {/* Live Search for Recent Transactions
-            <div className="mb-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  placeholder="Search transactions by reference ID, user, or product..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 border-slate-200 focus:border-slate-400 focus:ring-slate-400"
-                />
-                {searchTerm && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSearchTerm('')}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  >
-                    ✕
-                  </Button>
-                )}
-              </div>
-              <p className="text-xs text-slate-500 mt-2">
-                💡 Live search: Type to filter transactions instantly
-              </p>
-            </div> */}
-
+          <CardContent className="p-0">
             <Table>
-              <TableHeader>
-                <TableRow className="border-slate-200 hover:bg-slate-50">
-                  <TableHead className="text-slate-600 font-medium">Reference ID</TableHead>
-                  <TableHead className="text-slate-600 font-medium">Product</TableHead>
-                  <TableHead className="text-slate-600 font-medium">User</TableHead>
-                  <TableHead className="text-slate-600 font-medium">Payment Method</TableHead>
-                  <TableHead className="text-slate-600 font-medium">Amount</TableHead>
-                  <TableHead className="text-slate-600 font-medium">Date</TableHead>
-                  <TableHead className="text-slate-600 font-medium">Actions</TableHead>
+              <TableHeader className="bg-muted/50">
+                <TableRow className="hover:bg-transparent border-border/50">
+                  <TableHead>Reference ID</TableHead>
+                  <TableHead>Product</TableHead>
+                  <TableHead>User</TableHead>
+                  <TableHead>Payment Method</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recentTransactions?.transactions
-                  .filter((transaction) => {
-                    if (!searchTerm.trim()) return true;
-                    const searchLower = searchTerm.toLowerCase();
-                    return (
-                      getTransactionReferenceId(transaction).toLowerCase().includes(searchLower) ||
-                      getTransactionUserName(transaction).toLowerCase().includes(searchLower) ||
-                      transaction.name.toLowerCase().includes(searchLower) ||
-                      getTransactionPaymentMethod(transaction).toLowerCase().includes(searchLower)
-                    );
-                  })
-                  .map((transaction) => (
-                    <TableRow key={getTransactionReferenceId(transaction)} className="hover:bg-slate-50 border-slate-100">
-                      <TableCell>
-                        <code className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-700 border border-slate-200">
-                          {getTransactionReferenceId(transaction)}
-                        </code>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium text-slate-700">{transaction.name}</p>
-                          <p className="text-sm text-slate-500">
-                            Qty: {transaction.jumlah} • {formatCurrency(transaction.price)} each
-                          </p>
+                {currentTransactions.map((transaction: any) => (
+                  <TableRow key={getTransactionReferenceId(transaction)} className="hover:bg-muted/30 border-border/50 transition-colors">
+                    <TableCell>
+                      <code className="text-xs bg-muted px-2 py-1 rounded text-muted-foreground border border-border">
+                        {getTransactionReferenceId(transaction)}
+                      </code>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium text-foreground">{transaction.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Qty: {transaction.jumlah} • {formatCurrency(transaction.price)} each
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                          {getTransactionUserName(transaction).charAt(0).toUpperCase()}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <p className="font-medium text-slate-700">{getTransactionUserName(transaction)}</p>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getPaymentMethodBadge(getTransactionPaymentMethod(transaction))}>
-                          {getTransactionPaymentMethod(transaction)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <p className="font-medium text-slate-700">{formatCurrency(transaction.totalBayar)}</p>
-                      </TableCell>
-                      <TableCell>
-                        <p className="text-sm text-slate-500">{transaction.date}</p>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSearchTerm(getTransactionReferenceId(transaction));
-                            // Use the recommended endpoint to fetch transaction with receipt
-                            (async () => {
-                              await fetchTransactionWithReceipt(getTransactionReferenceId(transaction));
-                              setIsDetailOpen(true);
-                            })();
-                          }}
-                          className="text-slate-500 hover:text-slate-700 hover:bg-slate-100"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        <p className="font-medium text-foreground">{getTransactionUserName(transaction)}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getPaymentMethodBadge(getTransactionPaymentMethod(transaction))} className="capitalize">
+                        {getTransactionPaymentMethod(transaction)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <p className="font-medium text-foreground">{formatCurrency(transaction.totalBayar)}</p>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <Calendar className="h-3 w-3" />
+                        {transaction.date}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSearchTerm(getTransactionReferenceId(transaction));
+                          // Use the recommended endpoint to fetch transaction with receipt
+                          (async () => {
+                            await fetchTransactionWithReceipt(getTransactionReferenceId(transaction));
+                            setIsDetailOpen(true);
+                          })();
+                        }}
+                        className="text-muted-foreground hover:text-primary hover:bg-primary/10"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
-            
+
             {/* Show message when no transactions match search */}
-            {recentTransactions?.transactions && 
-             recentTransactions.transactions.filter((transaction) => {
-               if (!searchTerm.trim()) return true;
-               const searchLower = searchTerm.toLowerCase();
-               return (
-                 getTransactionReferenceId(transaction).toLowerCase().includes(searchLower) ||
-                 getTransactionUserName(transaction).toLowerCase().includes(searchLower) ||
-                 transaction.name.toLowerCase().includes(searchLower) ||
-                 getTransactionPaymentMethod(transaction).toLowerCase().includes(searchLower)
-               );
-             }).length === 0 && searchTerm.trim() && (
+            {filteredTransactions.length === 0 && searchTerm.trim() && (
               <div className="text-center py-8">
-                <Search className="h-8 w-8 mx-auto text-slate-400 mb-2" />
-                <p className="text-slate-600">No transactions match "{searchTerm}"</p>
-                <p className="text-sm text-slate-500">Try a different search term</p>
+                <Search className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                <p className="text-foreground">No transactions match "{searchTerm}"</p>
+                <p className="text-sm text-muted-foreground">Try a different search term</p>
               </div>
             )}
-            
+
             {/* Show message when no transactions at all */}
             {(!recentTransactions?.transactions || recentTransactions.transactions.length === 0) && !searchTerm.trim() && (
               <div className="text-center py-12">
-                <CreditCard className="h-12 w-12 mx-auto text-slate-400 mb-4" />
-                <p className="text-lg font-medium text-slate-600">No transactions found</p>
-                <p className="text-slate-500">Transactions will appear here once available</p>
+                <CreditCard className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                <p className="text-lg font-medium text-foreground">No transactions found</p>
+                <p className="text-muted-foreground">Transactions will appear here once available</p>
               </div>
             )}
           </CardContent>
-        </Card>
-      )}
-
-      {/* Detail View - shown after clicking a transaction */}
-      {isDetailOpen && selectedDetail && (
-        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm border border-slate-100 mt-4">
-          <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-t-lg">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-slate-700">Transaction Details</CardTitle>
+          {/* Footer Pagination */}
+          <div className="p-4 border-t border-border/50 bg-muted/20 flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">
+              Showing {startIndex + 1} to {Math.min(endIndex, filteredTransactions.length)} of {filteredTransactions.length} entries
+            </div>
+            <div className="flex items-center gap-2">
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                onClick={closeSearchResults}
-                className="text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className="hidden sm:flex"
               >
-                ✕ Close
+                First
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              <div className="flex items-center gap-1 mx-2">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  // Logic to show window of pages around current page
+                  let pageNum = i + 1;
+                  if (totalPages > 5) {
+                    if (currentPage > 3) {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    if (pageNum > totalPages) {
+                      pageNum = totalPages - (4 - i);
+                    }
+                  }
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNum)}
+                      className="h-8 w-8 p-0"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages || totalPages === 0}
+              >
+                Next
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="hidden sm:flex"
+              >
+                Last
               </Button>
             </div>
-            <CardDescription className="text-slate-500">
-              Reference: {selectedDetail.reffId || getTransactionReferenceId(selectedDetail)}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <p className="text-sm text-slate-500">User</p>
-                <p className="font-medium text-slate-700">{getTransactionUserName(selectedDetail)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Product</p>
-                <p className="font-medium text-slate-700">{selectedDetail.produk || selectedDetail.name}</p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Amount</p>
-                <p className="font-medium text-slate-700">{formatCurrency(selectedDetail.totalBayar)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Payment Method</p>
-                <Badge variant={getPaymentMethodBadge(selectedDetail.metodeBayar)}>
-                  {getTransactionPaymentMethod(selectedDetail)}
-                </Badge>
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Date</p>
-                <p className="font-medium text-slate-700">{selectedDetail.tanggal || selectedDetail.date}</p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Profit</p>
-                <p className="font-medium text-emerald-600">{formatCurrency(selectedDetail.profit || 0)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">User Role</p>
-                <Badge variant="outline" className="border-slate-200 text-slate-600">
-                  {(selectedDetail.userRole || 'USER').toUpperCase()}
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
+          </div>
         </Card>
-      )}
+      )
+      }
+
+      {/* Detail View - shown after clicking a transaction */}
+      {
+        isDetailOpen && selectedDetail && (
+          <Card className="card-premium border-none shadow-soft mt-4 animate-in fade-in-50 slide-in-from-bottom-4 duration-300">
+            <CardHeader className="bg-muted/50 border-b border-border/50 rounded-t-xl">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  Transaction Details
+                </CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={closeSearchResults}
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted"
+                >
+                  ✕ Close
+                </Button>
+              </div>
+              <CardDescription>
+                Reference: <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded border border-border ml-1">{selectedDetail.reffId || getTransactionReferenceId(selectedDetail)}</span>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">User</p>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                      {getTransactionUserName(selectedDetail).charAt(0).toUpperCase()}
+                    </div>
+                    <p className="font-medium text-foreground">{getTransactionUserName(selectedDetail)}</p>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Product</p>
+                  <p className="font-medium text-foreground">{selectedDetail.produk || selectedDetail.name}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount</p>
+                  <p className="font-bold text-xl text-foreground">{formatCurrency(selectedDetail.totalBayar)}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment Method</p>
+                  <Badge variant={getPaymentMethodBadge(selectedDetail.metodeBayar)} className="capitalize">
+                    {getTransactionPaymentMethod(selectedDetail)}
+                  </Badge>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</p>
+                  <div className="flex items-center gap-1 font-medium text-foreground">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    {selectedDetail.tanggal || selectedDetail.date}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Profit</p>
+                  <p className="font-medium text-emerald-500">{formatCurrency(selectedDetail.profit || 0)}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">User Role</p>
+                  <Badge variant="outline" className="capitalize">
+                    {(selectedDetail.userRole || 'USER').toUpperCase()}
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )
+      }
 
       {/* Account Details from Receipt - shown when detail is open */}
-      {isDetailOpen && selectedDetail && (
-        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm border border-slate-100 mt-4">
-          <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-slate-700 flex items-center gap-2">
-                <FileText className="h-5 w-5 text-blue-600" />
-                Account Details
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                {selectedDetail.receiptExists && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => downloadReceipt(selectedDetail.reffId || getTransactionReferenceId(selectedDetail))}
-                    className="border-blue-200 text-blue-600 hover:bg-blue-50"
-                  >
-                    <Download className="h-4 w-4 mr-1" />
-                    Download
-                  </Button>
-                )}
-                <Badge variant="outline" className="border-blue-200 text-blue-600">
-                  {selectedDetail.receiptExists ? 'Receipt Available' : 'No Receipt'}
-                </Badge>
+      {
+        isDetailOpen && selectedDetail && (
+          <Card className="card-premium border-none shadow-soft mt-4 animate-in fade-in-50 slide-in-from-bottom-4 duration-300 delay-100">
+            <CardHeader className="bg-blue-500/5 border-b border-blue-500/10 rounded-t-xl">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                  <Smartphone className="h-5 w-5" />
+                  Account Details
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  {selectedDetail.receiptExists && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => downloadReceipt(selectedDetail.reffId || getTransactionReferenceId(selectedDetail))}
+                      className="border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                    >
+                      <Download className="h-4 w-4 mr-1" />
+                      Download
+                    </Button>
+                  )}
+                  <Badge variant="outline" className="border-blue-200 text-blue-600 dark:border-blue-800 dark:text-blue-400">
+                    {selectedDetail.receiptExists ? 'Receipt Available' : 'No Receipt'}
+                  </Badge>
+                </div>
               </div>
-            </div>
-            <CardDescription className="text-slate-500">
-              Account information from transaction receipt
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-6">
-            {isLoadingReceipt ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
-                <p className="text-slate-600">Loading account details...</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {selectedDetail.receiptExists && receiptContent ? (
-                  <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                    <div className="flex items-start gap-3">
-                      <div className="bg-blue-100 p-2 rounded-lg">
-                        <Smartphone className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium text-slate-700">Receipt Content</h4>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={copyReceiptContent}
-                            className="border-blue-200 text-blue-600 hover:bg-blue-50"
-                          >
-                            {isCopied ? (
-                              <>
-                                <Check className="h-4 w-4 mr-1" />
-                                Copied!
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="h-4 w-4 mr-1" />
-                                Copy All
-                              </>
-                            )}
-                          </Button>
+              <CardDescription>
+                Account information from transaction receipt
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              {isLoadingReceipt ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mr-3"></div>
+                  <p className="text-muted-foreground">Loading account details...</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {selectedDetail.receiptExists && receiptContent ? (
+                    <div className="bg-muted/30 rounded-xl p-4 border border-border/50">
+                      <div className="flex items-start gap-4">
+                        <div className="bg-blue-500/10 p-2.5 rounded-xl shrink-0">
+                          <FileText className="h-5 w-5 text-blue-500" />
                         </div>
-                        <div className="bg-white rounded border border-slate-200 p-3">
-                          <pre className="text-sm text-slate-600 whitespace-pre-wrap font-mono leading-relaxed">
-                            {receiptContent}
-                          </pre>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : !selectedDetail.receiptExists ? (
-                  <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-amber-100 p-2 rounded-lg">
-                        <FileText className="h-5 w-5 text-amber-600" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium text-slate-700 mb-1">No Receipt Available</h4>
-                        <p className="text-sm text-amber-700">
-                          This transaction was processed before the receipt system was implemented, or the receipt was not generated.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-                
-                {/* Show account information from transaction data if available */}
-                {selectedDetail && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <User className="h-4 w-4 text-emerald-600" />
-                        <h4 className="font-medium text-slate-700">Transaction Account Info</h4>
-                      </div>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-slate-600">Product:</span>
-                          <span className="font-medium text-slate-700">{selectedDetail.produk || selectedDetail.name}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-600">User ID:</span>
-                          <span className="font-medium text-slate-700">{selectedDetail.user || selectedDetail.user_name}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-600">Payment Method:</span>
-                          <span className="font-medium text-slate-700">{selectedDetail.metodeBayar || selectedDetail.payment_method}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-600">User Role:</span>
-                          <span className="font-medium text-slate-700 capitalize">{selectedDetail.userRole || 'bronze'}</span>
-                        </div>
-                        {selectedDetail.deliveredAccount && (
-                          <div className="mt-3 p-2 bg-white rounded border border-emerald-200">
-                            <span className="text-slate-600 text-xs">Delivered Account:</span>
-                            <p className="font-mono text-xs text-slate-700 mt-1">{selectedDetail.deliveredAccount}</p>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-medium text-foreground">Receipt Content</h4>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={copyReceiptContent}
+                              className="h-8"
+                            >
+                              {isCopied ? (
+                                <>
+                                  <Check className="h-3.5 w-3.5 mr-1.5" />
+                                  Copied!
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="h-3.5 w-3.5 mr-1.5" />
+                                  Copy All
+                                </>
+                              )}
+                            </Button>
                           </div>
-                        )}
+                          <div className="bg-background rounded-lg border border-border p-4 shadow-sm overflow-x-auto">
+                            <pre className="text-sm text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed">
+                              {receiptContent}
+                            </pre>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    
-                    <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <FileText className="h-4 w-4 text-amber-600" />
-                        <h4 className="font-medium text-slate-700">Receipt Status</h4>
-                      </div>
-                      <div className="space-y-2 text-sm">
-                        {selectedDetail.receiptExists ? (
-                          <div className="text-emerald-700">
-                            <p className="font-medium">✅ Receipt Available</p>
-                            <p className="text-xs mt-1">
-                              Receipt content is displayed above with account details and transaction information.
-                            </p>
-                          </div>
-                        ) : (
-                          <div className="text-amber-700">
-                            <p className="font-medium">⚠️ Receipt Not Available</p>
-                            <p className="text-xs mt-1">
-                              This transaction may not have generated a receipt yet, or the receipt system was not active at the time of purchase.
-                            </p>
-                          </div>
-                        )}
+                  ) : !selectedDetail.receiptExists ? (
+                    <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/20">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-amber-500/20 p-2 rounded-lg">
+                          <FileText className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-amber-700 dark:text-amber-400 mb-1">No Receipt Available</h4>
+                          <p className="text-sm text-amber-600/80 dark:text-amber-400/80">
+                            This transaction was processed before the receipt system was implemented, or the receipt was not generated.
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-    </PageContainer>
+                  ) : null}
+
+                  {/* Show account information from transaction data if available */}
+                  {selectedDetail && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/20">
+                        <div className="flex items-center gap-2 mb-3">
+                          <User className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                          <h4 className="font-medium text-emerald-700 dark:text-emerald-400">Transaction Account Info</h4>
+                        </div>
+                        <div className="space-y-2.5 text-sm">
+                          <div className="flex justify-between border-b border-emerald-500/10 pb-2">
+                            <span className="text-muted-foreground">Product:</span>
+                            <span className="font-medium text-foreground">{selectedDetail.produk || selectedDetail.name}</span>
+                          </div>
+                          <div className="flex justify-between border-b border-emerald-500/10 pb-2">
+                            <span className="text-muted-foreground">User ID:</span>
+                            <span className="font-medium text-foreground">{selectedDetail.user || selectedDetail.user_name}</span>
+                          </div>
+                          <div className="flex justify-between border-b border-emerald-500/10 pb-2">
+                            <span className="text-muted-foreground">Payment Method:</span>
+                            <span className="font-medium text-foreground">{selectedDetail.metodeBayar || selectedDetail.payment_method}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">User Role:</span>
+                            <span className="font-medium text-foreground capitalize">{selectedDetail.userRole || 'bronze'}</span>
+                          </div>
+                          {selectedDetail.deliveredAccount && (
+                            <div className="mt-3 p-3 bg-background rounded-lg border border-emerald-500/20 shadow-sm">
+                              <span className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Delivered Account:</span>
+                              <p className="font-mono text-sm text-foreground mt-1 break-all">{selectedDetail.deliveredAccount}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/20">
+                        <div className="flex items-center gap-2 mb-3">
+                          <FileText className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                          <h4 className="font-medium text-amber-700 dark:text-amber-400">Receipt Status</h4>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          {selectedDetail.receiptExists ? (
+                            <div className="text-emerald-600 dark:text-emerald-400">
+                              <p className="font-medium flex items-center gap-1">
+                                <Check className="h-4 w-4" /> Receipt Available
+                              </p>
+                              <p className="text-xs mt-1 text-muted-foreground">
+                                Receipt content is displayed above with account details and transaction information.
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="text-amber-600 dark:text-amber-400">
+                              <p className="font-medium flex items-center gap-1">
+                                <Smartphone className="h-4 w-4" /> Receipt Not Available
+                              </p>
+                              <p className="text-xs mt-1 text-muted-foreground">
+                                This transaction may not have generated a receipt yet, or the receipt system was not active at the time of purchase.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )
+      }
+    </div >
   );
 }

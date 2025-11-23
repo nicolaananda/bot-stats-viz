@@ -1,23 +1,4 @@
 export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  message?: string;
-}
-
-// Updated Dashboard Overview to match advanced API
-export interface DashboardOverview {
-  totalUsers: number;
-  totalTransactions: number;
-  totalRevenue: number;
-  totalProfit: number;
-  activeUsers: number;
-  avgLTV?: number;
-}
-
-// Legacy interface for backward compatibility
-export interface LegacyDashboardOverview {
-  totalTransaksi: number;
   totalPendapatan: number;
   transaksiHariIni: number;
   pendapatanHariIni: number;

@@ -7,25 +7,25 @@ All colors MUST be HSL.
 */
 
 :root {
-  /* Base Colors - Elegant Neutral Palette */
-  --background: 220 20% 97%;
+  /* Base Colors - Fresh & Clean */
+  --background: 210 40% 98%;
   --foreground: 222 47% 11%;
   
-  /* Primary Colors - Fresh Teal (softer) */
-  --primary: 200 65% 42%;
-  --primary-foreground: 0 0% 98%;
+  /* Primary Colors - Vibrant Blue/Indigo */
+  --primary: 230 85% 60%;
+  --primary-foreground: 0 0% 100%;
   
-  /* Secondary Colors - Soft Gray */
-  --secondary: 220 12% 95%;
+  /* Secondary Colors - Soft Cool Gray */
+  --secondary: 210 40% 96.1%;
   --secondary-foreground: 222 47% 11%;
   
-  /* Accent Colors - Refined Indigo */
-  --accent: 262 70% 55%;
-  --accent-foreground: 0 0% 98%;
+  /* Accent Colors - Fresh Mint/Teal */
+  --accent: 170 70% 50%;
+  --accent-foreground: 0 0% 100%;
   
-  /* Muted Colors - Subtle Tones */
-  --muted: 220 12% 95%;
-  --muted-foreground: 220 10% 40%;
+  /* Muted Colors */
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215 16% 47%;
   
   /* Card & Popover Colors */
   --card: 0 0% 100%;
@@ -34,112 +34,118 @@ All colors MUST be HSL.
   --popover-foreground: 222 47% 11%;
   
   /* Border & Input Colors */
-  --border: 220 13% 91%;
-  --input: 220 13% 91%;
-  --ring: 200 65% 42%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 230 85% 60%;
   
-  /* Destructive Colors - Refined Red */
+  /* Destructive Colors */
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
   
-  /* Success & Info Colors */
-  --success: 156 60% 42%;
-  --info: 210 70% 50%;
+  /* Status Colors */
+  --success: 142 71% 45%;
+  --info: 217 91% 60%;
+  --warning: 38 92% 50%;
 
-  /* Chart Palette - Elegant Multicolor (softer) */
-  --chart-1: 200 65% 45%; /* teal */
-  --chart-2: 262 65% 56%; /* indigo */
-  --chart-3: 158 55% 42%; /* emerald */
-  --chart-4: 28 85% 55%;  /* amber */
-  --chart-5: 338 62% 54%; /* rose */
+  /* Chart Palette - Fresh & Vibrant */
+  --chart-1: 230 85% 60%; /* Primary Blue */
+  --chart-2: 170 70% 50%; /* Accent Mint */
+  --chart-3: 280 65% 60%; /* Purple */
+  --chart-4: 340 75% 55%; /* Pink */
+  --chart-5: 40 90% 60%;  /* Orange */
   
-  /* Sidebar Colors - Light Theme */
-  --sidebar-background: 220 14% 97%;
-  --sidebar-foreground: 222 47% 11%;
-  --sidebar-primary: 200 65% 42%;
-  --sidebar-primary-foreground: 0 0% 98%;
-  --sidebar-accent: 262 70% 55%;
-  --sidebar-accent-foreground: 0 0% 98%;
+  /* Sidebar Colors - Glassy/Light */
+  --sidebar-background: 0 0% 100%;
+  --sidebar-foreground: 240 5% 26%;
+  --sidebar-primary: 230 85% 60%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 210 40% 96.1%;
+  --sidebar-accent-foreground: 230 85% 60%;
   --sidebar-border: 220 13% 91%;
-  --sidebar-ring: 200 65% 42%;
+  --sidebar-ring: 230 85% 60%;
   
-  /* Premium Gradients (subtle) */
-  --gradient-primary: linear-gradient(135deg, hsl(200, 65%, 42%) 0%, hsl(262, 70%, 55%) 100%);
-  --gradient-secondary: linear-gradient(135deg, hsl(220, 12%, 96%) 0%, hsl(0, 0%, 100%) 100%);
-  --gradient-accent: linear-gradient(135deg, hsl(262, 70%, 55%) 0%, hsl(200, 65%, 42%) 100%);
+  /* Fresh Gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(230, 85%, 60%) 0%, hsl(260, 80%, 65%) 100%);
+  --gradient-secondary: linear-gradient(135deg, hsl(210, 40%, 98%) 0%, hsl(0, 0%, 100%) 100%);
+  --gradient-accent: linear-gradient(135deg, hsl(170, 70%, 50%) 0%, hsl(190, 80%, 50%) 100%);
+  --gradient-fresh: linear-gradient(135deg, hsl(230, 85%, 60%) 0%, hsl(170, 70%, 50%) 100%);
   
-  /* Sophisticated Shadows */
-  --shadow-glow: 0 0 20px rgba(56, 189, 248, 0.12);
-  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-elevated: 0 10px 25px -3px rgba(0, 0, 0, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.06);
+  /* Modern Shadows */
+  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.15);
+  --shadow-card: 0 2px 8px -2px rgba(0, 0, 0, 0.05), 0 0 1px rgba(0,0,0,0.1);
+  --shadow-elevated: 0 10px 30px -5px rgba(0, 0, 0, 0.1), 0 4px 10px -3px rgba(0, 0, 0, 0.05);
+  --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
   
-  /* Border Radius */
-  --radius: 0.75rem;
+  /* Border Radius - Softer */
+  --radius: 1rem;
 }
 
-/* Dark Mode - Premium Dark Theme */
+/* Dark Mode - Deep & Rich */
 .dark {
   --background: 222 47% 11%;
   --foreground: 210 40% 98%;
   
-  --primary: 200 70% 58%;
+  --primary: 230 85% 65%;
   --primary-foreground: 222 47% 11%;
   
-  --secondary: 217 28% 18%;
+  --secondary: 217 32% 17%;
   --secondary-foreground: 210 40% 98%;
   
-  --accent: 262 70% 62%;
+  --accent: 170 70% 50%;
   --accent-foreground: 222 47% 11%;
   
-  --muted: 217 28% 18%;
-  --muted-foreground: 220 15% 65%;
+  --muted: 217 32% 17%;
+  --muted-foreground: 215 20% 65%;
   
   --card: 222 47% 11%;
   --card-foreground: 210 40% 98%;
   --popover: 222 47% 11%;
   --popover-foreground: 210 40% 98%;
   
-  --border: 217 28% 20%;
-  --input: 217 28% 20%;
-  --ring: 200 70% 58%;
+  --border: 217 32% 17%;
+  --input: 217 32% 17%;
+  --ring: 230 85% 65%;
   
-  --destructive: 0 84% 70%;
-  --destructive-foreground: 222 47% 11%;
+  --destructive: 0 62% 30%;
+  --destructive-foreground: 0 0% 98%;
   
-  --success: 156 60% 50%;
-  --info: 210 70% 56%;
+  --success: 142 71% 45%;
+  --info: 217 91% 60%;
+  --warning: 38 92% 50%;
 
-  /* Chart Palette - Dark (balanced) */
-  --chart-1: 200 70% 58%;
-  --chart-2: 262 70% 62%;
-  --chart-3: 158 60% 50%;
-  --chart-4: 28 90% 60%;
-  --chart-5: 338 70% 62%;
+  /* Chart Palette - Dark Mode */
+  --chart-1: 230 85% 65%;
+  --chart-2: 170 70% 50%;
+  --chart-3: 280 65% 65%;
+  --chart-4: 340 75% 60%;
+  --chart-5: 40 90% 65%;
   
   --sidebar-background: 222 47% 11%;
   --sidebar-foreground: 210 40% 98%;
-  --sidebar-primary: 200 70% 58%;
+  --sidebar-primary: 230 85% 65%;
   --sidebar-primary-foreground: 222 47% 11%;
-  --sidebar-accent: 262 70% 62%;
-  --sidebar-accent-foreground: 222 47% 11%;
-  --sidebar-border: 217 33% 20%;
-  --sidebar-ring: 200 70% 58%;
+  --sidebar-accent: 217 32% 17%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-border: 217 32% 17%;
+  --sidebar-ring: 230 85% 65%;
   
-  /* Dark Mode Gradients (subtle) */
-  --gradient-primary: linear-gradient(135deg, hsl(200, 70%, 58%) 0%, hsl(262, 70%, 62%) 100%);
-  --gradient-secondary: linear-gradient(135deg, hsl(217, 28%, 18%) 0%, hsl(222, 47%, 11%) 100%);
-  --gradient-accent: linear-gradient(135deg, hsl(262, 70%, 62%) 0%, hsl(200, 70%, 58%) 100%);
+  --gradient-primary: linear-gradient(135deg, hsl(230, 85%, 65%) 0%, hsl(260, 80%, 70%) 100%);
+  --gradient-secondary: linear-gradient(135deg, hsl(217, 32%, 17%) 0%, hsl(222, 47%, 11%) 100%);
+  --gradient-accent: linear-gradient(135deg, hsl(170, 70%, 50%) 0%, hsl(190, 80%, 50%) 100%);
+  --gradient-fresh: linear-gradient(135deg, hsl(230, 85%, 65%) 0%, hsl(170, 70%, 50%) 100%);
   
-  /* Dark Mode Shadows */
-  --shadow-glow: 0 0 20px rgba(56, 189, 248, 0.2);
-  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.28), 0 1px 2px 0 rgba(0, 0, 0, 0.18);
-  --shadow-elevated: 0 10px 25px -3px rgba(0, 0, 0, 0.28), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.25);
+  --shadow-card: 0 2px 8px -2px rgba(0, 0, 0, 0.3), 0 0 1px rgba(0,0,0,0.4);
+  --shadow-elevated: 0 10px 30px -5px rgba(0, 0, 0, 0.4), 0 4px 10px -3px rgba(0, 0, 0, 0.2);
+  --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
 }
 
-/* Premium Typography Enhancements */
 @layer base {
+  * {
+    @apply border-border;
+  }
   body {
-    @apply antialiased;
+    @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
   
@@ -150,51 +156,62 @@ All colors MUST be HSL.
   
   /* Selection styling */
   ::selection {
-    background-color: hsl(var(--primary) / 0.16);
+    background-color: hsl(var(--primary) / 0.2);
     color: hsl(var(--primary));
   }
 }
 
 /* Premium Component Enhancements */
 @layer components {
-  /* Glass morphism effect */
+  /* Glass morphism effect - Enhanced */
   .glass {
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
   }
   
   .dark .glass {
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
   
   /* Premium button styles */
   .btn-premium {
-    @apply relative overflow-hidden transition-all duration-300;
+    @apply relative overflow-hidden transition-all duration-300 shadow-md hover:shadow-lg active:scale-95;
     background: var(--gradient-primary);
+    color: white;
+    border: none;
   }
   
   .btn-premium::before {
     content: '';
     @apply absolute inset-0 opacity-0 transition-opacity duration-300;
-    background: var(--gradient-accent);
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.2), transparent);
+    transform: skewX(-20deg) translateX(-150%);
   }
   
   .btn-premium:hover::before {
     @apply opacity-100;
+    transform: skewX(-20deg) translateX(150%);
+    transition: transform 0.5s;
   }
   
   /* Premium card styles */
   .card-premium {
-    @apply relative overflow-hidden transition-all duration-300;
-    background: var(--gradient-secondary);
+    @apply relative overflow-hidden transition-all duration-300 bg-card border border-border/50;
     box-shadow: var(--shadow-card);
   }
   
   .card-premium:hover {
     box-shadow: var(--shadow-elevated);
-    transform: translateY(-2px);
+    transform: translateY(-4px);
+    border-color: hsl(var(--primary) / 0.2);
+  }
+  
+  /* Fresh Input Styles */
+  .input-fresh {
+    @apply bg-background border-border transition-all duration-200 focus:ring-2 focus:ring-primary/20 focus:border-primary;
   }
 }
 
@@ -202,5 +219,9 @@ All colors MUST be HSL.
 [data-radix-dialog-overlay] {
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
-  background-color: rgba(0, 0, 0, 0.3) !important;
+  background-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark [data-radix-dialog-overlay] {
+  background-color: rgba(0, 0, 0, 0.4) !important;
 }

@@ -118,31 +118,31 @@ export const dashboardApi = {
   async getUserActivity(): Promise<UserActivity> {
     const response = await api.get<ApiResponse<any>>(API_ENDPOINTS.users.activity);
     console.log('🔍 Debug: Full API response:', response.data);
-    
+
     if (response.data.success && response.data.data) {
       // Transform backend response to match frontend interface
       const backendData = response.data.data;
-      
+
       // Check if response has the expected structure
       if (backendData && typeof backendData === 'object' && Array.isArray(backendData.userActivity)) {
         console.log('🔍 Debug: Valid user activity structure detected');
         console.log('🔍 Debug: User activity array length:', backendData.userActivity.length);
-        
+
         // Debug: Log the first user data to see structure
         if (backendData.userActivity.length > 0) {
           console.log('🔍 Debug: First user data structure:', backendData.userActivity[0]);
           console.log('🔍 Debug: Available fields:', Object.keys(backendData.userActivity[0]));
         }
-        
+
         // Transform user data to match interface
         const userActivity = backendData.userActivity.map((user: any) => {
           // Try multiple possible field names for transaction count
           const transactionCount = user.totalTransaksi || user.transactionCount || user.transaksi || user.count || 0;
           const totalSpent = user.totalSpent || user.totalPendapatan || user.spent || user.amount || 0;
           const saldo = user.saldo || user.balance || user.credit || 0;
-          
+
           console.log(`🔍 Debug: User ${user.user || 'unknown'} - transactionCount: ${transactionCount}, totalSpent: ${totalSpent}`);
-          
+
           return {
             userId: user.user || user.userId || user.user_id || 'unknown',
             username: user.user || user.username || user.name || 'User ' + (user.user || user.userId || 'unknown')?.slice(-4),
@@ -153,7 +153,7 @@ export const dashboardApi = {
             role: determineUserRole(totalSpent),
           };
         });
-        
+
         // Transform and return the data
         return {
           activeUsers: backendData.activeUsers || 0,
@@ -166,7 +166,7 @@ export const dashboardApi = {
           }
         };
       }
-      
+
       // If structure doesn't match, validate as before
       const validation = validateArrayData(backendData, [], 'getUserActivity');
       if (!validation.isValid) {
@@ -183,7 +183,7 @@ export const dashboardApi = {
           }
         };
       }
-      
+
       // Calculate active users and new users
       const activeUsers = backendData.length;
       const newUsers = backendData.filter((user: any) => {
@@ -205,9 +205,9 @@ export const dashboardApi = {
         const transactionCount = user.totalTransaksi || user.transactionCount || user.transaksi || user.count || 0;
         const totalSpent = user.totalSpent || user.totalPendapatan || user.spent || user.amount || 0;
         const saldo = user.saldo || user.balance || user.credit || 0;
-        
+
         console.log(`🔍 Debug: User ${user.user || 'unknown'} - transactionCount: ${transactionCount}, totalSpent: ${totalSpent}`);
-        
+
         return {
           userId: user.user || user.userId || user.user_id || 'unknown',
           username: user.user || user.username || user.name || 'User ' + (user.user || user.userId || 'unknown')?.slice(-4),
@@ -240,22 +240,22 @@ export const dashboardApi = {
       userId.includes('@s.whatsapp.net') ? userId : `${userId}@s.whatsapp.net`,  // Add WhatsApp format
       userId.replace('@s.whatsapp.net', ''),  // Remove WhatsApp format
     ];
-    
+
     console.log(`🔍 Debug: Trying getUserTransactions with IDs:`, possibleUserIds);
-    
+
     let lastError = null;
-    
+
     // Try each ID format until one works
     for (const tryUserId of possibleUserIds) {
       try {
         console.log(`🔍 Debug: Attempting API call with userId: ${tryUserId}`);
         const response = await api.get<ApiResponse<UserTransactions>>(API_ENDPOINTS.users.transactions(tryUserId));
-        
+
         if (response.data.success && response.data.data) {
           console.log(`✅ Success with userId: ${tryUserId}`);
           console.log(`🔍 Debug: API response data:`, response.data.data);
           console.log(`🔍 Debug: Available fields:`, Object.keys(response.data.data));
-          
+
           // Ensure transaksi array exists
           if (!response.data.data.transaksi || !Array.isArray(response.data.data.transaksi)) {
             console.warn('getUserTransactions: transaksi is not an array:', response.data.data.transaksi);
@@ -267,7 +267,7 @@ export const dashboardApi = {
               totalSpent: 0
             };
           }
-          
+
           // Transform data to ensure backward compatibility
           const transformedData = {
             ...response.data.data,
@@ -294,7 +294,7 @@ export const dashboardApi = {
         continue; // Try next ID format
       }
     }
-    
+
     // If all ID formats failed, throw the last error
     throw new Error(lastError?.message || 'Failed to fetch user transactions with any ID format');
   },
@@ -347,7 +347,7 @@ export const dashboardApi = {
           limit: limit
         };
       }
-      
+
       // Transform data to ensure backward compatibility
       const transformedData = {
         ...response.data.data,
@@ -392,10 +392,10 @@ export const dashboardApi = {
       search: search,
       role: role
     });
-    
+
     const response = await api.get<ApiResponse<any>>(`${API_ENDPOINTS.users.all}?${params}`);
     console.log('🔍 Debug: getAllUsers response:', response.data);
-    
+
     if (response.data.success && response.data.data) {
       // Log first user for debugging
       if (response.data.data.users && response.data.data.users.length > 0) {
@@ -412,15 +412,15 @@ export const dashboardApi = {
     try {
       // Get user activity data
       const userActivityResponse = await dashboardApi.getUserActivity();
-      
+
       // Get recent transactions to enhance user data
       const recentTransactionsResponse = await dashboardApi.getRecentTransactions(100); // Get more transactions
-      
+
       console.log('🔍 Debug: Recent transactions response:', recentTransactionsResponse);
-      
+
       // Create a map of user transactions with multiple ID formats
       const userTransactionMap = new Map<string, { count: number; totalSpent: number }>();
-      
+
       if (recentTransactionsResponse.transactions) {
         console.log('🔍 Debug: Processing transactions...');
         recentTransactionsResponse.transactions.forEach((transaction: any, index: number) => {
@@ -436,20 +436,20 @@ export const dashboardApi = {
             transaction.user_id ? `${transaction.user_id}@s.whatsapp.net` : null,
             transaction.user ? `${transaction.user}@s.whatsapp.net` : null,
           ].filter(Boolean); // Remove null/undefined values
-          
+
           if (index < 5) { // Log first 5 transactions for debugging
             console.log(`🔍 Debug: Transaction ${index + 1} possible user IDs:`, possibleUserIds);
           }
-          
+
           // Use the first non-empty user ID
           const userId = possibleUserIds[0] || 'unknown';
           const current = userTransactionMap.get(userId) || { count: 0, totalSpent: 0 };
-          
+
           userTransactionMap.set(userId, {
             count: current.count + 1,
             totalSpent: current.totalSpent + (transaction.totalBayar || transaction.price || 0)
           });
-          
+
           // Also try to map with different ID formats
           possibleUserIds.forEach(id => {
             if (id && id !== userId) {
@@ -462,10 +462,10 @@ export const dashboardApi = {
           });
         });
       }
-      
+
       console.log('🔍 Debug: User transaction map keys:', Array.from(userTransactionMap.keys()));
       console.log('🔍 Debug: User activity user IDs:', userActivityResponse.userActivity.map(u => u.userId));
-      
+
       // Enhance user activity data with transaction information
       const enhancedUserActivity = userActivityResponse.userActivity.map(user => {
         // Try to find transaction data with different ID formats
@@ -476,9 +476,9 @@ export const dashboardApi = {
           // Try extracting just the phone number
           user.userId?.match(/\d+/)?.[0],
         ].filter(Boolean);
-        
+
         let transactionInfo = { count: 0, totalSpent: 0 };
-        
+
         for (const id of possibleMatchIds) {
           const found = userTransactionMap.get(id);
           if (found && found.count > 0) {
@@ -487,29 +487,29 @@ export const dashboardApi = {
             break;
           }
         }
-        
+
         if (transactionInfo.count === 0) {
           console.log(`🔍 Debug: No transaction data found for user ${user.userId}, tried IDs:`, possibleMatchIds);
         }
-        
+
         // Debug: Log the final enhanced user data
         const enhancedUser = {
           ...user,
           transactionCount: transactionInfo.count || user.transactionCount || 0,
           totalSpent: transactionInfo.totalSpent || user.totalSpent || 0,
         };
-        
+
         console.log(`🔍 Debug: Enhanced user ${user.userId}:`, {
           original: { transactionCount: user.transactionCount, totalSpent: user.totalSpent },
           transactionInfo: transactionInfo,
           final: { transactionCount: enhancedUser.transactionCount, totalSpent: enhancedUser.totalSpent }
         });
-        
+
         return enhancedUser;
       });
-      
+
       console.log('🔍 Debug: Enhanced user activity with transaction data:', enhancedUserActivity);
-      
+
       return {
         ...userActivityResponse,
         userActivity: enhancedUserActivity,
@@ -526,16 +526,16 @@ export const dashboardApi = {
     try {
       // Get regular users data
       const usersResponse = await this.getAllUsers(page, limit, search, role);
-      
+
       // Use individual API calls for accurate transaction counts (no limit issues)
       console.log('🔍 Debug: Using individual user transaction API calls for accuracy');
-      
+
       // Helper: normalize an ID to canonical key (remove @s.whatsapp.net and @lid, clean)
       const normalizeId = (raw: any): string | null => {
         if (!raw || typeof raw !== 'string') return null;
         return raw.replace('@s.whatsapp.net', '').replace('@lid', '').trim();
       };
-      
+
       // Enhance users data with transaction information
       if (usersResponse.users && Array.isArray(usersResponse.users)) {
         console.log('🔍 Debug: Original users data:', usersResponse.users.map((u: any) => ({
@@ -544,7 +544,7 @@ export const dashboardApi = {
           transactionCount: u.transactionCount,
           totalSpent: u.totalSpent
         })));
-        
+
         const enhancedUsers = await Promise.all(usersResponse.users.map(async (user: any) => {
           try {
             // Get normalized user ID for API call
@@ -558,22 +558,22 @@ export const dashboardApi = {
                 hasTransactions: false
               };
             }
-            
+
             // Call individual user transactions API for accurate data
             const userTransactions = await this.getUserTransactions(normalizedId);
-            
+
             console.log(`🔍 Debug: User ${user.userId} (${normalizedId}) - API Response:`, {
               totalTransaksi: userTransactions.totalTransaksi,
               totalSpent: userTransactions.totalSpent,
               transactionCount: userTransactions.transaksi?.length || 0
             });
-            
+
             return {
               ...user,
               transactionCount: userTransactions.totalTransaksi || 0,
               totalSpent: userTransactions.totalSpent || 0,
-              lastActivity: userTransactions.transaksi && userTransactions.transaksi.length > 0 
-                ? userTransactions.transaksi[0].date 
+              lastActivity: userTransactions.transaksi && userTransactions.transaksi.length > 0
+                ? userTransactions.transaksi[0].date
                 : user.lastActivity,
               hasTransactions: (userTransactions.totalTransaksi || 0) > 0,
               _debugNormalizedId: normalizedId,
@@ -593,7 +593,7 @@ export const dashboardApi = {
             };
           }
         }));
-        
+
         console.log('🔍 Debug: Enhanced users data:', enhancedUsers.map((u: any) => ({
           userId: u.userId || u.user_id,
           username: u.username,
@@ -602,13 +602,13 @@ export const dashboardApi = {
           hasTransactions: u.hasTransactions,
           normalizedId: u._debugNormalizedId
         })));
-        
+
         return {
           ...usersResponse,
           users: enhancedUsers,
         };
       }
-      
+
       return usersResponse;
     } catch (error) {
       console.error('Error getting enhanced users:', error);
@@ -708,7 +708,7 @@ export const dashboardApi = {
     if (response.data.success && response.data.data) {
       // Transform data to match frontend expectations
       const data = response.data.data;
-      
+
       return {
         ...data,
         topProducts: data.topProducts?.map((product: any) => ({
@@ -726,14 +726,14 @@ export const dashboardApi = {
     const response = await api.get<ApiResponse<any>>(API_ENDPOINTS.products.performance);
     if (response.data.success && response.data.data) {
       const data = response.data.data;
-      
+
       // Combine all products from different categories
       const allProducts = [
         ...(data.products || []),
         ...(data.topProducts || []),
         ...(data.lowStock || [])
       ];
-      
+
       // Remove duplicates based on product ID
       const uniqueProducts = allProducts.reduce((acc: any[], product: any) => {
         if (!acc.find(p => p.id === product.id)) {
@@ -741,13 +741,13 @@ export const dashboardApi = {
         }
         return acc;
       }, []);
-      
+
       // Calculate summary metrics
       const totalProducts = uniqueProducts.length;
       const totalRevenue = uniqueProducts.reduce((sum: number, p: any) => sum + (p.sales?.totalRevenue || 0), 0);
       const totalProfit = uniqueProducts.reduce((sum: number, p: any) => sum + (p.sales?.totalProfit || 0), 0);
       const avgProfitMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
-      
+
       return {
         products: uniqueProducts,
         summary: {
@@ -801,9 +801,9 @@ export const dashboardApi = {
       // Get enhanced user data with correct transaction counts
       const enhancedUsers = await this.getEnhancedAllUsers(1, 1000); // Get all users
       const users = enhancedUsers.users;
-      
+
       console.log('🔍 getUserBehaviorAnalytics Debug: Processing', users.length, 'users');
-      
+
       // Segment users based on transaction count
       const segments = {
         new: users.filter(user => (user.transactionCount || 0) <= 1),
@@ -811,21 +811,21 @@ export const dashboardApi = {
         loyal: users.filter(user => (user.transactionCount || 0) >= 6 && (user.transactionCount || 0) <= 10),
         vip: users.filter(user => (user.transactionCount || 0) >= 11)
       };
-      
+
       console.log('🔍 Segment counts:', {
         new: segments.new.length,
         regular: segments.regular.length,
         loyal: segments.loyal.length,
         vip: segments.vip.length
       });
-      
+
       // Calculate segment statistics
       const totalUsers = users.length;
       const segmentStats = Object.entries(segments).reduce((acc, [segment, segmentUsers]) => {
         const count = segmentUsers.length;
         const totalSpent = segmentUsers.reduce((sum, user) => sum + (user.totalSpent || 0), 0);
         const totalTransactions = segmentUsers.reduce((sum, user) => sum + (user.transactionCount || 0), 0);
-        
+
         acc[segment] = {
           count,
           totalSpent,
@@ -835,9 +835,9 @@ export const dashboardApi = {
         };
         return acc;
       }, {} as any);
-      
+
       console.log('🔍 Segment Stats Debug:', segmentStats);
-      
+
       // Calculate churn analysis
       const recentlyActive = users.filter(user => {
         if (!user.lastActivity) return false;
@@ -846,10 +846,10 @@ export const dashboardApi = {
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         return lastActivity > thirtyDaysAgo;
       }).length;
-      
+
       const churnedUsers = totalUsers - recentlyActive;
       const churnRate = totalUsers > 0 ? (churnedUsers / totalUsers) * 100 : 0;
-      
+
       // Get top spenders and frequent buyers with proper user identification
       const topSpenders = users
         .filter(user => (user.totalSpent || 0) > 0)
@@ -858,13 +858,13 @@ export const dashboardApi = {
         .map(user => ({
           ...user,
           // Use phone number as display name if username is generic
-          username: user.username === 'User .net' || user.username === 'User @lid' || !user.username 
-            ? user.userId.replace('@s.whatsapp.net', '').replace('@lid', '') 
+          username: user.username === 'User .net' || user.username === 'User @lid' || !user.username
+            ? user.userId.replace('@s.whatsapp.net', '').replace('@lid', '')
             : user.username,
           // Ensure we have the clean user ID for display
           displayId: user.userId.replace('@s.whatsapp.net', '').replace('@lid', '')
         }));
-        
+
       const mostFrequentBuyers = users
         .filter(user => (user.transactionCount || 0) > 0)
         .sort((a, b) => (b.transactionCount || 0) - (a.transactionCount || 0))
@@ -872,13 +872,13 @@ export const dashboardApi = {
         .map(user => ({
           ...user,
           // Use phone number as display name if username is generic
-          username: user.username === 'User .net' || user.username === 'User @lid' || !user.username 
-            ? user.userId.replace('@s.whatsapp.net', '').replace('@lid', '') 
+          username: user.username === 'User .net' || user.username === 'User @lid' || !user.username
+            ? user.userId.replace('@s.whatsapp.net', '').replace('@lid', '')
             : user.username,
           // Ensure we have the clean user ID for display
           displayId: user.userId.replace('@s.whatsapp.net', '').replace('@lid', '')
         }));
-      
+
       return {
         segments,
         segmentStats,

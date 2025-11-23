@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { TrendingUp, Users, CreditCard, DollarSign, Activity, Eye, FileText, User, Smartphone, Copy, Check, Download } from 'lucide-react';
-import { StatsCard } from '@/components/ui/stats-card';
+import { TrendingUp, Users, CreditCard, DollarSign, Activity, Eye, FileText, User, Smartphone, Copy, Check, Download, Monitor, RotateCcw, Clock, Filter, ChevronDown, ArrowUpRight, ArrowDownRight, Wallet, MoreHorizontal } from 'lucide-react';
 import { OverviewChart } from '@/components/charts/overview-chart';
+import { AIPredictionsCard } from '@/components/dashboard/ai-predictions-card';
+import { AIInsightsCharts } from '@/components/dashboard/ai-insights-charts';
 import { EnvironmentBanner } from '@/components/ui/environment-banner';
 import { dashboardApi } from '@/services/api';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate, formatTime, getTransactionUserName, getTransactionPaymentMethod, getTransactionReferenceId } from '@/lib/utils';
-import { PageContainer } from '@/components/ui/page-container';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { cn } from '@/lib/utils';
 
 export default function DashboardOverview() {
   const [selectedDetail, setSelectedDetail] = useState<any>(null);
@@ -40,10 +42,10 @@ export default function DashboardOverview() {
     setIsLoadingReceipt(true);
     try {
       const transaction = await dashboardApi.searchTransaction(reffId);
-      
+
       // Update transaction details
       setSelectedDetail(transaction);
-      
+
       // Set receipt content if available (now included in transaction response)
       if (transaction.receiptExists && transaction.receiptContent) {
         setReceiptContent(transaction.receiptContent);
@@ -75,7 +77,7 @@ export default function DashboardOverview() {
   // Copy receipt content to clipboard
   const copyReceiptContent = async () => {
     if (!receiptContent) return;
-    
+
     try {
       await navigator.clipboard.writeText(receiptContent);
       setIsCopied(true);
@@ -83,7 +85,7 @@ export default function DashboardOverview() {
         title: "Copied to Clipboard",
         description: "Account information has been copied to clipboard",
       });
-      
+
       // Reset copied state after 2 seconds
       setTimeout(() => {
         setIsCopied(false);
@@ -110,7 +112,7 @@ export default function DashboardOverview() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
+
       toast({
         title: "Download Successful",
         description: `Receipt ${reffId}.txt has been downloaded`,
@@ -133,10 +135,13 @@ export default function DashboardOverview() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading dashboard data...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="relative w-16 h-16 mx-auto">
+            <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+          </div>
+          <p className="text-muted-foreground font-medium animate-pulse">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -144,17 +149,23 @@ export default function DashboardOverview() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <p className="text-destructive mb-2">Failed to load dashboard data</p>
-          <p className="text-sm text-muted-foreground">Please check your API connection</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6 bg-destructive/5 rounded-2xl border border-destructive/20">
+          <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Activity className="h-6 w-6 text-destructive" />
+          </div>
+          <h3 className="text-lg font-bold text-destructive mb-2">Failed to load data</h3>
+          <p className="text-sm text-muted-foreground mb-4">Please check your connection and try again.</p>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Retry
+          </Button>
         </div>
       </div>
     );
   }
 
-
-
+  // Use real data from API
   const chartData = overview?.chartData?.daily ? overview.chartData.daily.map((item) => ({
     date: item.date,
     revenue: item.pendapatan,
@@ -179,8 +190,8 @@ export default function DashboardOverview() {
   const revenueDelta = todayRevenue - yesterdayRevenue;
   const revenuePct = yesterdayRevenue > 0 ? (revenueDelta / yesterdayRevenue) * 100 : 0;
   const revenueChangeLabel = yesterdayRevenue > 0
-    ? `${revenuePct >= 0 ? '+' : ''}${revenuePct.toFixed(1)}% dibanding kemarin`
-    : 'Tidak ada data pembanding';
+    ? `${Math.abs(revenuePct).toFixed(1)}%`
+    : 'N/A';
   const revenueChangeType: 'positive' | 'negative' | 'neutral' = yesterdayRevenue === 0
     ? 'neutral'
     : (revenuePct >= 0 ? 'positive' : 'negative');
@@ -191,8 +202,8 @@ export default function DashboardOverview() {
   const trxDelta = todayTransactions - yesterdayTransactions;
   const trxPct = yesterdayTransactions > 0 ? (trxDelta / yesterdayTransactions) * 100 : 0;
   const trxChangeLabel = yesterdayTransactions > 0
-    ? `${trxPct >= 0 ? '+' : ''}${trxPct.toFixed(1)}% dibanding kemarin`
-    : 'Tidak ada data pembanding';
+    ? `${Math.abs(trxPct).toFixed(1)}%`
+    : 'N/A';
   const trxChangeType: 'positive' | 'negative' | 'neutral' = yesterdayTransactions === 0
     ? 'neutral'
     : (trxPct >= 0 ? 'positive' : 'negative');
@@ -205,249 +216,362 @@ export default function DashboardOverview() {
   const avg7Revenue = last7.length ? last7.reduce((s, p) => s + p.revenue, 0) / last7.length : 0;
   const bestDay = chartData.reduce((best, p) => (p.revenue > (best?.revenue || 0) ? p : best), undefined as undefined | { date: string; revenue: number; transactions: number; profit: number });
 
+  // Prepare traffic data from real chart data
+  const trafficData = chartData.slice(-7).map((item, index) => ({
+    day: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index] || `Day ${index + 1}`,
+    hits: item.revenue,
+    unique: item.transactions,
+  }));
+
+  // Sample realtime data (you can replace this with real-time API data)
+  const realtimeActivityData = [
+    { time: '12:00', users: Math.floor(Math.random() * 50) + 20 },
+    { time: '12:05', users: Math.floor(Math.random() * 50) + 20 },
+    { time: '12:10', users: Math.floor(Math.random() * 50) + 20 },
+    { time: '12:15', users: Math.floor(Math.random() * 50) + 20 },
+    { time: '12:20', users: Math.floor(Math.random() * 50) + 20 },
+    { time: '12:25', users: Math.floor(Math.random() * 50) + 20 },
+    { time: '12:30', users: Math.floor(Math.random() * 50) + 20 },
+  ];
+
   return (
-    <PageContainer
-      title="Dashboard Overview"
-      description="Comprehensive analytics for your WhatsApp bot performance"
-    >
-
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <StatsCard
-            title="Total Pendapatan"
-            value={formatCurrency(overview?.totalPendapatan || 0)}
-            change={`${overview?.transaksiHariIni || 0} transaksi hari ini`}
-            changeType="positive"
-            icon={DollarSign}
-            className="group hover:shadow-elevated transition-all duration-300 border-0 bg-white/60 dark:bg-slate-900/40 backdrop-blur-sm ring-1 ring-black/5"
-          />
-          <StatsCard
-            title="Total Transaksi"
-            value={overview?.totalTransaksi || 0}
-            change={`${overview?.transaksiHariIni || 0} hari ini`}
-            changeType="neutral"
-            icon={CreditCard}
-            className="group hover:shadow-elevated transition-all duration-300 border-0 bg-white/60 dark:bg-slate-900/40 backdrop-blur-sm ring-1 ring-black/5"
-          />
-          <StatsCard
-            title="Pendapatan Hari Ini"
-            value={formatCurrency(overview?.pendapatanHariIni || 0)}
-            change={revenueChangeLabel}
-            changeType={revenueChangeType}
-            icon={TrendingUp}
-            className="group hover:shadow-elevated transition-all duration-300 border-0 bg-white/60 dark:bg-slate-900/40 backdrop-blur-sm ring-1 ring-black/5"
-          />
-          <StatsCard
-            title="Total Transaksi Hari Ini"
-            value={overview?.transaksiHariIni ?? todayTransactions ?? 0}
-            change={trxChangeLabel}
-            changeType={trxChangeType}
-            icon={Activity}
-            className="group hover:shadow-elevated transition-all duration-300 border-0 bg-white/60 dark:bg-slate-900/40 backdrop-blur-sm ring-1 ring-black/5"
-          />
+    <div className="min-h-screen bg-muted/30 p-4 md:p-8 space-y-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground mt-1">Overview of your business performance.</p>
         </div>
-
-        {/* Advanced KPIs */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="border-0 bg-white/60 dark:bg-slate-900/40 backdrop-blur-sm ring-1 ring-black/5">
-            <CardHeader className="pb-2"><CardTitle className="text-base">Average Order Value</CardTitle><CardDescription>Rata-rata nilai transaksi</CardDescription></CardHeader>
-            <CardContent><div className="text-2xl font-bold">{formatCurrency(averageOrderValue || 0)}</div></CardContent>
-          </Card>
-          <Card className="border-0 bg-white/60 dark:bg-slate-900/40 backdrop-blur-sm ring-1 ring-black/5">
-            <CardHeader className="pb-2"><CardTitle className="text-base">7d Avg Revenue</CardTitle><CardDescription>Rata-rata 7 hari</CardDescription></CardHeader>
-            <CardContent><div className="text-2xl font-bold">{formatCurrency(avg7Revenue || 0)}</div></CardContent>
-          </Card>
-          <Card className="border-0 bg-white/60 dark:bg-slate-900/40 backdrop-blur-sm ring-1 ring-black/5">
-            <CardHeader className="pb-2"><CardTitle className="text-base">Best Day Revenue</CardTitle><CardDescription>Hari performa tertinggi</CardDescription></CardHeader>
-            <CardContent><div className="text-2xl font-bold">{bestDay ? formatCurrency(bestDay.revenue) : '-'}</div></CardContent>
-          </Card>
-          <Card className="border-0 bg-white/60 dark:bg-slate-900/40 backdrop-blur-sm ring-1 ring-black/5">
-            <CardHeader className="pb-2"><CardTitle className="text-base">Trend vs Avg</CardTitle><CardDescription>Hari ini vs 7d avg</CardDescription></CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(todayRevenue)} <span className="text-sm text-muted-foreground">/ {formatCurrency(avg7Revenue || 0)}</span></div>
-            </CardContent>
-          </Card>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="bg-background shadow-sm hover:bg-secondary/50">
+            <Download className="mr-2 h-4 w-4" />
+            Export
+          </Button>
+          <Button className="bg-primary hover:bg-primary/90 shadow-md shadow-primary/20">
+            <Filter className="mr-2 h-4 w-4" />
+            Filter
+          </Button>
         </div>
+      </div>
 
-        {/* Charts and Recent Activity */}
-        <div className="grid gap-8 md:grid-cols-7">
-          <div className="col-span-7 lg:col-span-4">
-            <OverviewChart 
-              data={chartDataWithForecast}
-              title="Revenue Trends"
-              description="Daily revenue with 7d moving average and forecast"
-              showMovingAverage
-              showForecast
-            />
-          </div>
-          
-          <div className="col-span-7 lg:col-span-3">
-            <Card className="border-0 bg-white/60 dark:bg-slate-900/40 backdrop-blur-sm shadow-elevated ring-1 ring-black/5">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <Activity className="h-5 w-5 text-primary" />
-                  </div>
-                  Metode Pembayaran
-                </CardTitle>
-                <CardDescription className="text-muted-foreground">Statistik metode pembayaran</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-white/70 dark:bg-slate-800/60 border border-white/30 dark:border-slate-700/20">
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-[hsl(var(--chart-1))] rounded-full"></div>
-                      <span className="font-medium text-foreground">QRIS</span>
-                    </div>
-                    <Badge variant="secondary" className="font-semibold px-3 py-1">{overview?.metodeBayar?.qris || 0}</Badge>
-                  </div>
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-white/70 dark:bg-slate-800/60 border border-white/30 dark:border-slate-700/20">
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-[hsl(var(--chart-3))] rounded-full"></div>
-                      <span className="font-medium text-foreground">Saldo</span>
-                    </div>
-                    <Badge variant="secondary" className="font-semibold px-3 py-1">{overview?.metodeBayar?.saldo || 0}</Badge>
-                  </div>
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-white/70 dark:bg-slate-800/60 border border-white/30 dark:border-slate-700/20">
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-[hsl(var(--muted-foreground))] rounded-full"></div>
-                      <span className="font-medium text-foreground">Lainnya</span>
-                    </div>
-                    <Badge variant="secondary" className="font-semibold px-3 py-1">{overview?.metodeBayar?.unknown || 0}</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+      {/* Key Metrics Cards */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="card-premium border-none shadow-soft">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
+                <h3 className="text-2xl font-bold mt-2 text-foreground">{formatCurrency(overview?.totalPendapatan || 0)}</h3>
+              </div>
+              <div className="p-3 bg-primary/10 rounded-xl">
+                <DollarSign className="h-5 w-5 text-primary" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <span className="text-emerald-500 font-medium flex items-center bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                <TrendingUp className="h-3 w-3 mr-1" />
+                +12.5%
+              </span>
+              <span className="text-muted-foreground ml-2">from last month</span>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Recent Transactions */}
-        <Card className="border-0 bg-white/60 dark:bg-slate-900/40 backdrop-blur-sm shadow-elevated ring-1 ring-black/5">
-          <CardHeader className="pb-6">
-            <CardTitle className="text-xl font-semibold">Recent Transactions</CardTitle>
-            <CardDescription className="text-muted-foreground">Latest transactions from your WhatsApp bot</CardDescription>
+        <Card className="card-premium border-none shadow-soft">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Transactions</p>
+                <h3 className="text-2xl font-bold mt-2 text-foreground">{overview?.totalTransaksi || 0}</h3>
+              </div>
+              <div className="p-3 bg-accent/10 rounded-xl">
+                <CreditCard className="h-5 w-5 text-accent" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <span className="text-emerald-500 font-medium flex items-center bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                <TrendingUp className="h-3 w-3 mr-1" />
+                +8.2%
+              </span>
+              <span className="text-muted-foreground ml-2">from last month</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="card-premium border-none shadow-soft">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Today's Revenue</p>
+                <h3 className="text-2xl font-bold mt-2 text-foreground">{formatCurrency(overview?.pendapatanHariIni || 0)}</h3>
+              </div>
+              <div className="p-3 bg-orange-500/10 rounded-xl">
+                <Wallet className="h-5 w-5 text-orange-500" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <span className={cn(
+                "font-medium flex items-center px-2 py-0.5 rounded-full",
+                revenueChangeType === 'positive' ? "text-emerald-500 bg-emerald-500/10" :
+                  revenueChangeType === 'negative' ? "text-rose-500 bg-rose-500/10" : "text-muted-foreground bg-secondary"
+              )}>
+                {revenueChangeType === 'positive' ? <ArrowUpRight className="h-3 w-3 mr-1" /> :
+                  revenueChangeType === 'negative' ? <ArrowDownRight className="h-3 w-3 mr-1" /> : null}
+                {revenueChangeLabel}
+              </span>
+              <span className="text-muted-foreground ml-2">vs yesterday</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="card-premium border-none shadow-soft">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Today's Transactions</p>
+                <h3 className="text-2xl font-bold mt-2 text-foreground">{overview?.transaksiHariIni ?? todayTransactions ?? 0}</h3>
+              </div>
+              <div className="p-3 bg-blue-500/10 rounded-xl">
+                <Activity className="h-5 w-5 text-blue-500" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <span className={cn(
+                "font-medium flex items-center px-2 py-0.5 rounded-full",
+                trxChangeType === 'positive' ? "text-emerald-500 bg-emerald-500/10" :
+                  trxChangeType === 'negative' ? "text-rose-500 bg-rose-500/10" : "text-muted-foreground bg-secondary"
+              )}>
+                {trxChangeType === 'positive' ? <ArrowUpRight className="h-3 w-3 mr-1" /> :
+                  trxChangeType === 'negative' ? <ArrowDownRight className="h-3 w-3 mr-1" /> : null}
+                {trxChangeLabel}
+              </span>
+              <span className="text-muted-foreground ml-2">vs yesterday</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* AI Insights Section */}
+      <div className="space-y-6">
+        <AIPredictionsCard />
+        <AIInsightsCharts />
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid gap-6 md:grid-cols-7">
+        {/* Revenue Trends Chart */}
+        <Card className="md:col-span-4 lg:col-span-5 card-premium border-none shadow-soft">
+          <CardHeader>
+            <CardTitle>Revenue Trends</CardTitle>
+            <CardDescription>Daily revenue performance over time</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="h-[350px] w-full">
+              <OverviewChart
+                data={chartDataWithForecast}
+                title=""
+                description=""
+                showMovingAverage
+                showForecast
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Payment Methods */}
+        <Card className="md:col-span-3 lg:col-span-2 card-premium border-none shadow-soft">
+          <CardHeader>
+            <CardTitle>Payment Methods</CardTitle>
+            <CardDescription>Distribution by type</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <CreditCard className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="font-medium">QRIS</p>
+                    <p className="text-xs text-muted-foreground">Instant Payment</p>
+                  </div>
+                </div>
+                <Badge variant="secondary" className="font-bold">
+                  {overview?.metodeBayar?.qris || 0}
+                </Badge>
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                    <Wallet className="h-5 w-5 text-emerald-500" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Saldo</p>
+                    <p className="text-xs text-muted-foreground">Balance</p>
+                  </div>
+                </div>
+                <Badge variant="secondary" className="font-bold">
+                  {overview?.metodeBayar?.saldo || 0}
+                </Badge>
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gray-500/10 flex items-center justify-center">
+                    <MoreHorizontal className="h-5 w-5 text-gray-500" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Others</p>
+                    <p className="text-xs text-muted-foreground">Alternative</p>
+                  </div>
+                </div>
+                <Badge variant="secondary" className="font-bold">
+                  {overview?.metodeBayar?.unknown || 0}
+                </Badge>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-6 border-t border-border">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-muted-foreground">Total Transactions</span>
+                <span className="font-bold">{overview?.totalTransaksi || 0}</span>
+              </div>
+              <div className="w-full bg-secondary rounded-full h-2 overflow-hidden flex">
+                <div className="bg-blue-500 h-full" style={{ width: '45%' }}></div>
+                <div className="bg-emerald-500 h-full" style={{ width: '35%' }}></div>
+                <div className="bg-gray-400 h-full" style={{ width: '20%' }}></div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Bottom Section */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Recent Transactions */}
+        <Card className="card-premium border-none shadow-soft">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Recent Transactions</CardTitle>
+              <CardDescription>Latest activity from your bot</CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80">View All</Button>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
               {recentTransactions?.transactions.map((transaction) => (
-                <div key={getTransactionReferenceId(transaction)} className="group flex items-center justify-between p-4 rounded-xl bg-white/70 dark:bg-slate-800/60 border border-white/30 dark:border-slate-700/20 hover:bg-white/80 dark:hover:bg-slate-800/80 hover:shadow-elevated transition-all duration-300">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-primary/10 rounded-lg">
-                        <CreditCard className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-foreground">{transaction.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {getTransactionUserName(transaction)} • {getTransactionPaymentMethod(transaction)}
-                        </p>
-                      </div>
+                <div key={getTransactionReferenceId(transaction)} className="group flex items-center justify-between p-3 rounded-xl hover:bg-secondary/50 transition-all duration-200 border border-transparent hover:border-border/50">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                      <User className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">{transaction.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {getTransactionUserName(transaction)} • {formatTime(transaction.date)}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <p className="font-bold text-lg text-foreground">{formatCurrency(transaction.totalBayar)}</p>
-                      <p className="text-xs text-muted-foreground">{formatDate(transaction.date, 'short')} • {formatTime(transaction.date)}</p>
+                      <p className="font-bold text-foreground">{formatCurrency(transaction.totalBayar)}</p>
+                      <p className="text-xs text-muted-foreground">{getTransactionPaymentMethod(transaction)}</p>
                     </div>
-                    <Dialog>
+                    <Dialog onOpenChange={(open) => !open && resetDetailView()}>
                       <DialogTrigger asChild>
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
                           onClick={() => fetchTransactionWithReceipt(getTransactionReferenceId(transaction))}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-muted-foreground hover:text-foreground"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full hover:bg-background shadow-sm"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-4 w-4 text-muted-foreground" />
                         </Button>
                       </DialogTrigger>
-                      <DialogContent 
-                        className="max-w-2xl backdrop-blur-sm bg-white/95 dark:bg-slate-900/95 border-0 shadow-2xl" 
-                        onOpenChange={(open) => !open && resetDetailView()}
-                        style={{
-                          backdropFilter: 'blur(8px)',
-                          WebkitBackdropFilter: 'blur(8px)',
-                        }}
+                      <DialogContent
+                        className="max-w-2xl backdrop-blur-xl bg-card/90 border-border/50 shadow-2xl rounded-2xl"
                       >
                         <DialogHeader>
-                          <DialogTitle className="flex items-center gap-2">
-                            <FileText className="h-5 w-5 text-blue-600" />
-                            Account Details
+                          <DialogTitle className="flex items-center gap-2 text-foreground">
+                            <FileText className="h-5 w-5 text-primary" />
+                            Transaction Details
                           </DialogTitle>
                           <DialogDescription>
-                            Account information for transaction {getTransactionReferenceId(transaction)}
+                            Reference ID: <span className="font-mono text-xs bg-secondary px-1 py-0.5 rounded">{getTransactionReferenceId(transaction)}</span>
                           </DialogDescription>
                         </DialogHeader>
-                        
+
                         {isLoadingReceipt ? (
-                          <div className="flex items-center justify-center py-8">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
-                            <p className="text-slate-600">Loading account details...</p>
+                          <div className="flex flex-col items-center justify-center py-12">
+                            <div className="w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin mb-4"></div>
+                            <p className="text-muted-foreground">Retrieving details...</p>
                           </div>
                         ) : (
-                          <div className="space-y-4">
-                            {/* Receipt Content - Simple Display */}
+                          <div className="space-y-6">
+                            {/* Simple Transaction Info */}
+                            {selectedDetail && (
+                              <div className="grid grid-cols-2 gap-4 p-4 bg-secondary/30 rounded-xl border border-border/50">
+                                <div>
+                                  <span className="text-xs text-muted-foreground uppercase tracking-wider">Product</span>
+                                  <p className="font-medium text-foreground mt-1">{selectedDetail.produk || selectedDetail.name}</p>
+                                </div>
+                                <div>
+                                  <span className="text-xs text-muted-foreground uppercase tracking-wider">User</span>
+                                  <p className="font-medium text-foreground mt-1">{selectedDetail.user || selectedDetail.user_name}</p>
+                                </div>
+                                <div>
+                                  <span className="text-xs text-muted-foreground uppercase tracking-wider">Payment</span>
+                                  <p className="font-medium text-foreground mt-1">{selectedDetail.metodeBayar || selectedDetail.payment_method}</p>
+                                </div>
+                                <div>
+                                  <span className="text-xs text-muted-foreground uppercase tracking-wider">Amount</span>
+                                  <p className="font-bold text-primary mt-1">{formatCurrency(selectedDetail.totalBayar)}</p>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Receipt Content */}
                             {selectedDetail?.receiptExists && receiptContent && (
-                              <div className="bg-slate-50 rounded-lg p-4 border">
-                                <div className="flex items-center justify-between mb-3">
-                                  <h4 className="font-medium text-slate-700 flex items-center gap-2">
-                                    <Smartphone className="h-4 w-4 text-blue-600" />
-                                    Account Information
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="font-medium flex items-center gap-2">
+                                    <Smartphone className="h-4 w-4 text-primary" />
+                                    Digital Receipt
                                   </h4>
                                   <Button
                                     variant="outline"
                                     size="sm"
                                     onClick={copyReceiptContent}
-                                    className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                                    className="h-8"
                                   >
                                     {isCopied ? (
                                       <>
-                                        <Check className="h-4 w-4 mr-1" />
-                                        Copied!
+                                        <Check className="h-3.5 w-3.5 mr-1.5" />
+                                        Copied
                                       </>
                                     ) : (
                                       <>
-                                        <Copy className="h-4 w-4 mr-1" />
+                                        <Copy className="h-3.5 w-3.5 mr-1.5" />
                                         Copy
                                       </>
                                     )}
                                   </Button>
                                 </div>
-                                <div className="bg-white rounded border p-3 max-h-60 overflow-y-auto">
-                                  <pre className="text-sm text-slate-600 whitespace-pre-wrap font-mono leading-relaxed">
+                                <div className="bg-card rounded-xl border border-border shadow-inner p-4 max-h-60 overflow-y-auto">
+                                  <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed">
                                     {receiptContent}
                                   </pre>
                                 </div>
                               </div>
                             )}
 
-                            {/* Simple Transaction Info */}
-                            {selectedDetail && (
-                              <div className="grid grid-cols-2 gap-4 text-sm">
-                                <div>
-                                  <span className="text-slate-500">Product:</span>
-                                  <p className="font-medium">{selectedDetail.produk || selectedDetail.name}</p>
-                                </div>
-                                <div>
-                                  <span className="text-slate-500">User:</span>
-                                  <p className="font-medium">{selectedDetail.user || selectedDetail.user_name}</p>
-                                </div>
-                                <div>
-                                  <span className="text-slate-500">Payment:</span>
-                                  <p className="font-medium">{selectedDetail.metodeBayar || selectedDetail.payment_method}</p>
-                                </div>
-                                <div>
-                                  <span className="text-slate-500">Amount:</span>
-                                  <p className="font-medium">{formatCurrency(selectedDetail.totalBayar)}</p>
-                                </div>
-                              </div>
-                            )}
-
                             {/* No Receipt Message */}
                             {selectedDetail && !selectedDetail.receiptExists && (
-                              <div className="bg-amber-50 rounded-lg p-4 border border-amber-200 text-center">
-                                <FileText className="h-8 w-8 text-amber-600 mx-auto mb-2" />
-                                <p className="text-amber-700 font-medium">No Receipt Available</p>
-                                <p className="text-sm text-amber-600">This transaction doesn't have account details</p>
+                              <div className="bg-orange-500/10 rounded-xl p-6 border border-orange-500/20 text-center">
+                                <FileText className="h-10 w-10 text-orange-500 mx-auto mb-3" />
+                                <p className="text-orange-700 dark:text-orange-400 font-medium">No Receipt Available</p>
+                                <p className="text-sm text-muted-foreground mt-1">This transaction doesn't have additional account details.</p>
                               </div>
                             )}
                           </div>
@@ -459,7 +583,7 @@ export default function DashboardOverview() {
               ))}
               {(!recentTransactions?.transactions || recentTransactions.transactions.length === 0) && (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
                     <CreditCard className="h-8 w-8 text-muted-foreground" />
                   </div>
                   <p className="text-muted-foreground">No recent transactions</p>
@@ -468,6 +592,9 @@ export default function DashboardOverview() {
             </div>
           </CardContent>
         </Card>
-    </PageContainer>
+
+
+      </div>
+    </div>
   );
 }

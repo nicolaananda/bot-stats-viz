@@ -14,7 +14,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { StatsCard } from '@/components/ui/stats-card';
 import { dashboardApi } from '@/services/api';
 import { UserBehaviorAnalytics } from '@/types/dashboard';
 import { 
@@ -30,7 +29,6 @@ import {
   Cell,
   Pie
 } from 'recharts';
-import { PageContainer } from '@/components/ui/page-container';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 const SEGMENT_COLORS = {
@@ -106,39 +104,18 @@ export default function UserBehaviorPage() {
   const totalUsers = Object.values(behavior.segmentStats).reduce((sum, stats) => sum + stats.count, 0);
 
   return (
-    <PageContainer title="User Behavior Analytics" description="Discover user patterns, segments, and behavioral insights to drive growth">
-      <div className="space-y-8">
-        {/* Header with enhanced styling */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 p-8 text-white shadow-xl">
-          <div className="absolute inset-0 bg-black/20"></div>
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-white/20 rounded-lg backdrop-blur-sm">
-                <Users className="h-8 w-8" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold tracking-tight">User Behavior Analytics</h1>
-                <p className="text-blue-100 text-lg mt-2">
-                  Discover user patterns, segments, and behavioral insights to drive growth
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-4 mt-6">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2">
-                <span className="text-sm text-blue-100">Active Analysis</span>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2">
-                <span className="text-sm text-blue-100">Real-time Insights</span>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2">
-                <span className="text-sm text-blue-100">Predictive Analytics</span>
-              </div>
-            </div>
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Header */}
+      <div className="p-6 border-b border-gray-800">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white">User Behavior Analytics</h1>
+            <p className="text-gray-400 mt-1">Discover user patterns, segments, and behavioral insights to drive growth</p>
           </div>
-          <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white/10"></div>
-          <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-32 w-32 rounded-full bg-white/5"></div>
         </div>
+      </div>
 
+      <div className="p-6 space-y-6">
         {/* Enhanced Overview Stats */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
@@ -565,6 +542,6 @@ export default function UserBehaviorPage() {
         </TabsContent>
       </Tabs>
       </div>
-    </PageContainer>
+    </div>
   );
 } 

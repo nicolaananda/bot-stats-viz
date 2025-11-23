@@ -1,5 +1,5 @@
 export const API_CONFIG = {
-  baseURL: import.meta.env.VITE_API_URL || "https://api-botwa.nicola.id",
+  baseURL: import.meta.env.VITE_API_URL || "https://api.nicola.id",
   timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || "10000"),
   enableLogging: import.meta.env.VITE_API_LOGGING === "true",
 } as const;

@@ -23,6 +23,14 @@ import UserBehaviorPage from "./pages/user-behavior";
 import FinancialAnalyticsPage from "./pages/financial-analytics";
 import SalesAnalyticsPage from "./pages/sales-analytics";
 import InventoryAnalyticsPage from "./pages/inventory-analytics";
+// New Pages for Selia-style sidebar
+import ProjectsPage from "./pages/projects";
+import TasksPage from "./pages/tasks";
+import ReportsOverviewPage from "./pages/reports-overview";
+import CustomerReportPage from "./pages/customer-report";
+import SalesReportPage from "./pages/sales-report";
+import SettingsPage from "./pages/settings";
+import HelpPage from "./pages/help";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,30 +53,42 @@ const App = () => (
         }}
       >
         <SidebarProvider>
-          <div className="min-h-screen flex w-full bg-gradient-secondary">
+          <div className="flex min-h-screen w-full bg-background font-sans antialiased selection:bg-primary/10 selection:text-primary">
             <DashboardSidebar />
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out">
               <DashboardHeader />
-              <main className="flex-1 overflow-x-hidden overflow-y-auto">
-                <Routes>
-                  <Route path="/" element={<DashboardOverview />} />
-                  <Route path="/charts" element={<Charts />} />
-                  <Route path="/users" element={<UsersPage />} />
-                  <Route path="/users/:userId" element={<UserDetailPage />} />
-                  <Route path="/transactions" element={<TransactionsPage />} />
-                  <Route path="/products" element={<ProductsPage />} />
-                  <Route path="/products/stock" element={<ProductsStockPage />} />
-                  <Route path="/products/:productId" element={<ProductDetailPage />} />
-                  <Route path="/analytics" element={<AnalyticsPage />} />
-                  <Route path="/ref/:refId" element={<RefDetailPage />} />
-                  {/* Advanced Analytics Routes */}
-                  <Route path="/advanced-analytics" element={<AdvancedAnalyticsPage />} />
-                  <Route path="/product-performance" element={<ProductPerformancePage />} />
-                  <Route path="/user-behavior" element={<UserBehaviorPage />} />
-                  <Route path="/financial-analytics" element={<FinancialAnalyticsPage />} />
-                  <Route path="/sales-analytics" element={<SalesAnalyticsPage />} />
-                  <Route path="/inventory-analytics" element={<InventoryAnalyticsPage />} />
-                </Routes>
+              <main className="flex-1 overflow-x-hidden overflow-y-auto bg-muted/30 p-4 md:p-6 lg:p-8">
+                <div className="mx-auto max-w-7xl space-y-8 animate-in fade-in-50 duration-500 slide-in-from-bottom-4">
+                  <Routes>
+                    <Route path="/" element={<DashboardOverview />} />
+                    {/* Selia-style routes */}
+                    <Route path="/projects" element={<ProjectsPage />} />
+                    <Route path="/tasks" element={<TasksPage />} />
+                    <Route path="/reports" element={<ReportsOverviewPage />} />
+                    <Route path="/reports/overview" element={<ReportsOverviewPage />} />
+                    <Route path="/reports/customer" element={<CustomerReportPage />} />
+                    <Route path="/reports/sales" element={<SalesReportPage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/help" element={<HelpPage />} />
+                    {/* Legacy routes */}
+                    <Route path="/charts" element={<Charts />} />
+                    <Route path="/users" element={<UsersPage />} />
+                    <Route path="/users/:userId" element={<UserDetailPage />} />
+                    <Route path="/transactions" element={<TransactionsPage />} />
+                    <Route path="/products" element={<ProductsPage />} />
+                    <Route path="/products-stock" element={<ProductsStockPage />} />
+                    <Route path="/products/:productId" element={<ProductDetailPage />} />
+                    <Route path="/analytics" element={<AnalyticsPage />} />
+                    <Route path="/ref/:refId" element={<RefDetailPage />} />
+                    {/* Advanced Analytics Routes */}
+                    <Route path="/advanced-analytics" element={<AdvancedAnalyticsPage />} />
+                    <Route path="/product-performance" element={<ProductPerformancePage />} />
+                    <Route path="/user-behavior" element={<UserBehaviorPage />} />
+                    <Route path="/financial-analytics" element={<FinancialAnalyticsPage />} />
+                    <Route path="/sales-analytics" element={<SalesAnalyticsPage />} />
+                    <Route path="/inventory-analytics" element={<InventoryAnalyticsPage />} />
+                  </Routes>
+                </div>
               </main>
             </div>
           </div>
