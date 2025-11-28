@@ -12,7 +12,6 @@ import {
   ProductStats,
   RecentTransactions,
   ExportResponse,
-  ApiResponse,
   ProductStockResponse,
   StockSummaryResponse,
   StockAlertsResponse,
@@ -53,7 +52,9 @@ import {
   EditSingleStockItemRequest,
   EditSingleStockItemResponse,
   DeleteSingleStockItemRequest,
-  DeleteSingleStockItemResponse
+  DeleteSingleStockItemResponse,
+  SaldoHistoryResponse,
+  GenericResponse
 } from '@/types/dashboard';
 import { API_CONFIG, API_ENDPOINTS } from '@/config/api';
 import { validateArrayData, validateObjectData, safeGet } from '@/lib/api-utils';
@@ -90,7 +91,7 @@ function determineUserRole(totalSpent: number): string {
 export const dashboardApi = {
   // Dashboard Overview
   async getOverview(): Promise<DashboardOverview> {
-    const response = await api.get<ApiResponse<DashboardOverview>>(API_ENDPOINTS.dashboard.overview);
+    const response = await api.get<GenericResponse<DashboardOverview>>(API_ENDPOINTS.dashboard.overview);
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -99,7 +100,7 @@ export const dashboardApi = {
 
   // Chart Data
   async getDailyChart(): Promise<DailyChartData> {
-    const response = await api.get<ApiResponse<DailyChartData>>(API_ENDPOINTS.dashboard.dailyChart);
+    const response = await api.get<GenericResponse<DailyChartData>>(API_ENDPOINTS.dashboard.dailyChart);
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -107,7 +108,7 @@ export const dashboardApi = {
   },
 
   async getMonthlyChart(): Promise<MonthlyChartData> {
-    const response = await api.get<ApiResponse<MonthlyChartData>>(API_ENDPOINTS.dashboard.monthlyChart);
+    const response = await api.get<GenericResponse<MonthlyChartData>>(API_ENDPOINTS.dashboard.monthlyChart);
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -116,7 +117,7 @@ export const dashboardApi = {
 
   // User Management
   async getUserActivity(): Promise<UserActivity> {
-    const response = await api.get<ApiResponse<any>>(API_ENDPOINTS.users.activity);
+    const response = await api.get<GenericResponse<any>>(API_ENDPOINTS.users.activity);
     console.log('🔍 Debug: Full API response:', response.data);
 
     if (response.data.success && response.data.data) {
@@ -249,7 +250,7 @@ export const dashboardApi = {
     for (const tryUserId of possibleUserIds) {
       try {
         console.log(`🔍 Debug: Attempting API call with userId: ${tryUserId}`);
-        const response = await api.get<ApiResponse<UserTransactions>>(API_ENDPOINTS.users.transactions(tryUserId));
+        const response = await api.get<GenericResponse<UserTransactions>>(API_ENDPOINTS.users.transactions(tryUserId));
 
         if (response.data.success && response.data.data) {
           console.log(`✅ Success with userId: ${tryUserId}`);
@@ -299,8 +300,26 @@ export const dashboardApi = {
     throw new Error(lastError?.message || 'Failed to fetch user transactions with any ID format');
   },
 
+  async getSaldoHistory(userId: string, params: any = {}): Promise<SaldoHistoryResponse> {
+    const queryParams = new URLSearchParams();
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.offset) queryParams.append('offset', params.offset.toString());
+    if (params.action) queryParams.append('action', params.action);
+    if (params.method) queryParams.append('method', params.method);
+    if (params.source) queryParams.append('source', params.source);
+    if (params.search) queryParams.append('search', params.search);
+
+    const url = `${API_ENDPOINTS.users.saldoHistory(userId)}?${queryParams.toString()}`;
+    const response = await api.get<GenericResponse<SaldoHistoryResponse>>(url);
+
+    if (response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    throw new Error(response.data.error || 'Failed to fetch saldo history');
+  },
+
   async getUserStats(): Promise<UserStats> {
-    const response = await api.get<ApiResponse<UserStats>>(API_ENDPOINTS.users.stats);
+    const response = await api.get<GenericResponse<UserStats>>(API_ENDPOINTS.users.stats);
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -309,7 +328,7 @@ export const dashboardApi = {
 
   // Transactions
   async searchTransaction(reffId: string): Promise<TransactionDetail> {
-    const response = await api.get<ApiResponse<TransactionDetail>>(API_ENDPOINTS.transactions.search(reffId));
+    const response = await api.get<GenericResponse<TransactionDetail>>(API_ENDPOINTS.transactions.search(reffId));
     if (response.data.success && response.data.data) {
       // Transform data to ensure backward compatibility
       const transformedData = {
@@ -328,7 +347,7 @@ export const dashboardApi = {
 
   // Get transaction with receipt (recommended endpoint)
   async getTransactionWithReceipt(reffId: string): Promise<any> {
-    const response = await api.get<ApiResponse<any>>(API_ENDPOINTS.transactions.withReceipt(reffId));
+    const response = await api.get<GenericResponse<any>>(API_ENDPOINTS.transactions.withReceipt(reffId));
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -336,7 +355,7 @@ export const dashboardApi = {
   },
 
   async getRecentTransactions(limit: number = 20): Promise<RecentTransactions> {
-    const response = await api.get<ApiResponse<RecentTransactions>>(API_ENDPOINTS.transactions.recent(limit));
+    const response = await api.get<GenericResponse<RecentTransactions>>(API_ENDPOINTS.transactions.recent(limit));
     if (response.data.success && response.data.data) {
       // Ensure transactions array exists
       if (!response.data.data.transactions || !Array.isArray(response.data.data.transactions)) {
@@ -371,7 +390,7 @@ export const dashboardApi = {
 
   // Products
   async getProductStats(): Promise<ProductStats> {
-    const response = await api.get<ApiResponse<ProductStats>>(API_ENDPOINTS.products.stats);
+    const response = await api.get<GenericResponse<ProductStats>>(API_ENDPOINTS.products.stats);
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -393,7 +412,7 @@ export const dashboardApi = {
       role: role
     });
 
-    const response = await api.get<ApiResponse<any>>(`${API_ENDPOINTS.users.all}?${params}`);
+    const response = await api.get<GenericResponse<any>>(`${API_ENDPOINTS.users.all}?${params}`);
     console.log('🔍 Debug: getAllUsers response:', response.data);
 
     if (response.data.success && response.data.data) {
@@ -619,80 +638,80 @@ export const dashboardApi = {
 
   // Product Stock Management
   async getProductStock(): Promise<ProductStockResponse> {
-    const response = await api.get<ApiResponse<ProductStockResponse>>(API_ENDPOINTS.products.stock);
+    const response = await api.get<GenericResponse<ProductStockResponse>>(API_ENDPOINTS.products.stock);
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.error || 'Failed to fetch product stock');
   },
 
   // Product CRUD per contract
   async createProduct(payload: ProductCreateRequest): Promise<ProductCrudResponse> {
-    const response = await api.post<ApiResponse<any>>(API_ENDPOINTS.products.create, payload);
+    const response = await api.post<GenericResponse<any>>(API_ENDPOINTS.products.create, payload);
     if (response.data.success) return { success: true, data: response.data.data };
     throw new Error(response.data.error || 'Failed to create product');
   },
 
   async getProduct(productId: string): Promise<ProductCrudResponse> {
-    const response = await api.get<ApiResponse<any>>(API_ENDPOINTS.products.get(productId));
+    const response = await api.get<GenericResponse<any>>(API_ENDPOINTS.products.get(productId));
     if (response.data.success) return { success: true, data: response.data.data };
     throw new Error(response.data.error || 'Failed to get product');
   },
 
   async updateProduct(productId: string, payload: ProductUpdateRequest): Promise<ProductCrudResponse> {
-    const response = await api.patch<ApiResponse<any>>(API_ENDPOINTS.products.update(productId), payload);
+    const response = await api.patch<GenericResponse<any>>(API_ENDPOINTS.products.update(productId), payload);
     if (response.data.success) return { success: true, data: response.data.data };
     throw new Error(response.data.error || 'Failed to update product');
   },
 
   async deleteProduct(productId: string): Promise<ProductCrudResponse> {
-    const response = await api.delete<ApiResponse<any>>(API_ENDPOINTS.products.delete(productId));
+    const response = await api.delete<GenericResponse<any>>(API_ENDPOINTS.products.delete(productId));
     if (response.data.success) return { success: true, data: response.data.data };
     throw new Error(response.data.error || 'Failed to delete product');
   },
 
   async getStockSummary(): Promise<StockSummaryResponse> {
-    const response = await api.get<ApiResponse<StockSummaryResponse>>(API_ENDPOINTS.products.stockSummary);
+    const response = await api.get<GenericResponse<StockSummaryResponse>>(API_ENDPOINTS.products.stockSummary);
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.error || 'Failed to fetch stock summary');
   },
 
   async getStockAlerts(): Promise<StockAlertsResponse> {
-    const response = await api.get<ApiResponse<StockAlertsResponse>>(API_ENDPOINTS.products.stockAlerts);
+    const response = await api.get<GenericResponse<StockAlertsResponse>>(API_ENDPOINTS.products.stockAlerts);
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.error || 'Failed to fetch stock alerts');
   },
 
   async getProductStockHistory(productId: string): Promise<ProductStockHistoryResponse> {
-    const response = await api.get<ApiResponse<ProductStockHistoryResponse>>(API_ENDPOINTS.products.stockHistory(productId));
+    const response = await api.get<GenericResponse<ProductStockHistoryResponse>>(API_ENDPOINTS.products.stockHistory(productId));
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.error || 'Failed to fetch product stock history');
   },
 
   async getProductStockDetails(productId: string): Promise<ProductStockDetailsResponse> {
-    const response = await api.get<ApiResponse<ProductStockDetailsResponse>>(API_ENDPOINTS.products.stockDetails(productId));
+    const response = await api.get<GenericResponse<ProductStockDetailsResponse>>(API_ENDPOINTS.products.stockDetails(productId));
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.error || 'Failed to fetch product stock details');
   },
 
   async updateProductStock(productId: string, payload: StockUpdateRequest): Promise<StockUpdateResponse> {
-    const response = await api.put<ApiResponse<StockUpdateResponse>>(API_ENDPOINTS.products.updateStock(productId), payload);
+    const response = await api.put<GenericResponse<StockUpdateResponse>>(API_ENDPOINTS.products.updateStock(productId), payload);
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.error || 'Failed to update product stock');
   },
 
   async bulkUpdateStock(updates: StockUpdateRequest & { productId: string }[]): Promise<BulkStockUpdateResponse> {
-    const response = await api.post<ApiResponse<BulkStockUpdateResponse>>(API_ENDPOINTS.products.stock + '/bulk-update', { updates });
+    const response = await api.post<GenericResponse<BulkStockUpdateResponse>>(API_ENDPOINTS.products.stock + '/bulk-update', { updates });
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.error || 'Failed to perform bulk stock update');
   },
 
   async getStockAnalytics() {
-    const response = await api.get<ApiResponse<any>>(API_ENDPOINTS.products.stockAnalytics);
+    const response = await api.get<GenericResponse<any>>(API_ENDPOINTS.products.stockAnalytics);
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.error || 'Failed to fetch stock analytics');
   },
 
   async getStockReport() {
-    const response = await api.get<ApiResponse<any>>(API_ENDPOINTS.products.stockReport);
+    const response = await api.get<GenericResponse<any>>(API_ENDPOINTS.products.stockReport);
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.error || 'Failed to generate stock report');
   },
@@ -704,7 +723,7 @@ export const dashboardApi = {
 
   // Advanced Analytics Endpoints
   async getAdvancedAnalytics(): Promise<AdvancedAnalytics> {
-    const response = await api.get<ApiResponse<any>>(API_ENDPOINTS.analytics.advanced);
+    const response = await api.get<GenericResponse<any>>(API_ENDPOINTS.analytics.advanced);
     if (response.data.success && response.data.data) {
       // Transform data to match frontend expectations
       const data = response.data.data;
@@ -723,7 +742,7 @@ export const dashboardApi = {
   },
 
   async getProductPerformance(): Promise<ProductPerformance> {
-    const response = await api.get<ApiResponse<any>>(API_ENDPOINTS.products.performance);
+    const response = await api.get<GenericResponse<any>>(API_ENDPOINTS.products.performance);
     if (response.data.success && response.data.data) {
       const data = response.data.data;
 
@@ -909,88 +928,88 @@ export const dashboardApi = {
   },
 
   async getFinancialAnalytics(): Promise<FinancialAnalytics> {
-    const response = await api.get<ApiResponse<FinancialAnalytics>>(API_ENDPOINTS.analytics.finance);
+    const response = await api.get<GenericResponse<FinancialAnalytics>>(API_ENDPOINTS.analytics.finance);
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.error || 'Failed to fetch financial analytics');
   },
 
   async getRealtimeDashboard(): Promise<RealtimeDashboard> {
-    const response = await api.get<ApiResponse<RealtimeDashboard>>(API_ENDPOINTS.dashboard.realtime);
+    const response = await api.get<GenericResponse<RealtimeDashboard>>(API_ENDPOINTS.dashboard.realtime);
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.error || 'Failed to fetch realtime dashboard data');
   },
 
   async getPredictiveAnalytics(): Promise<PredictiveAnalytics> {
-    const response = await api.get<ApiResponse<PredictiveAnalytics>>(API_ENDPOINTS.dashboard.predictions);
+    const response = await api.get<GenericResponse<PredictiveAnalytics>>(API_ENDPOINTS.dashboard.predictions);
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.error || 'Failed to fetch predictive analytics');
   },
 
   async getStockAnalyticsAdvanced(): Promise<StockAnalytics> {
-    const response = await api.get<ApiResponse<StockAnalytics>>(API_ENDPOINTS.products.stockAnalytics);
+    const response = await api.get<GenericResponse<StockAnalytics>>(API_ENDPOINTS.products.stockAnalytics);
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.error || 'Failed to fetch advanced stock analytics');
   },
 
   // Bulk Stock Update with proper payload structure
   async bulkUpdateStockAdvanced(payload: BulkStockUpdateRequest): Promise<BulkStockUpdateResponse> {
-    const response = await api.post<ApiResponse<BulkStockUpdateResponse>>(API_ENDPOINTS.products.bulkStockUpdate, payload);
+    const response = await api.post<GenericResponse<BulkStockUpdateResponse>>(API_ENDPOINTS.products.bulkStockUpdate, payload);
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.error || 'Failed to perform bulk stock update');
   },
 
   // Stock Management CRUD Operations
   async addStock(productId: string, payload: AddStockRequest): Promise<AddStockResponse> {
-    const response = await api.post<ApiResponse<AddStockResponse>>(API_ENDPOINTS.products.addStock(productId), payload);
+    const response = await api.post<GenericResponse<AddStockResponse>>(API_ENDPOINTS.products.addStock(productId), payload);
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.message || response.data.error || 'Failed to add stock');
   },
 
   async editStock(productId: string, stockIndex: number, payload: EditStockRequest): Promise<EditStockResponse> {
-    const response = await api.put<ApiResponse<EditStockResponse>>(API_ENDPOINTS.products.editStock(productId, stockIndex), payload);
+    const response = await api.put<GenericResponse<EditStockResponse>>(API_ENDPOINTS.products.editStock(productId, stockIndex), payload);
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.message || response.data.error || 'Failed to edit stock');
   },
 
   async deleteStock(productId: string, stockIndex: number, payload: DeleteStockRequest = {}): Promise<DeleteStockResponse> {
-    const response = await api.delete<ApiResponse<DeleteStockResponse>>(API_ENDPOINTS.products.deleteStock(productId, stockIndex), { data: payload });
+    const response = await api.delete<GenericResponse<DeleteStockResponse>>(API_ENDPOINTS.products.deleteStock(productId, stockIndex), { data: payload });
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.message || response.data.error || 'Failed to delete stock');
   },
 
   async deleteMultipleStock(productId: string, payload: DeleteMultipleStockRequest): Promise<DeleteStockResponse> {
-    const response = await api.delete<ApiResponse<DeleteStockResponse>>(API_ENDPOINTS.products.deleteMultipleStock(productId), { data: payload });
+    const response = await api.delete<GenericResponse<DeleteStockResponse>>(API_ENDPOINTS.products.deleteMultipleStock(productId), { data: payload });
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.message || response.data.error || 'Failed to delete multiple stock');
   },
 
   async getStockItem(productId: string, stockIndex: number): Promise<GetStockItemResponse> {
-    const response = await api.get<ApiResponse<GetStockItemResponse>>(API_ENDPOINTS.products.getStockItem(productId, stockIndex));
+    const response = await api.get<GenericResponse<GetStockItemResponse>>(API_ENDPOINTS.products.getStockItem(productId, stockIndex));
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.message || response.data.error || 'Failed to get stock item');
   },
 
   async replaceAllStock(productId: string, payload: ReplaceAllStockRequest): Promise<ReplaceAllStockResponse> {
-    const response = await api.put<ApiResponse<ReplaceAllStockResponse>>(API_ENDPOINTS.products.replaceAllStock(productId), payload);
+    const response = await api.put<GenericResponse<ReplaceAllStockResponse>>(API_ENDPOINTS.products.replaceAllStock(productId), payload);
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.message || response.data.error || 'Failed to replace all stock');
   },
 
   async bulkStockOperations(payload: BulkOperationRequest): Promise<BulkOperationResponse> {
-    const response = await api.post<ApiResponse<BulkOperationResponse>>(API_ENDPOINTS.products.bulkOperations, payload);
+    const response = await api.post<GenericResponse<BulkOperationResponse>>(API_ENDPOINTS.products.bulkOperations, payload);
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.message || response.data.error || 'Failed to perform bulk operations');
   },
 
   // Single stock item operations per contract
   async addStockItem(productId: string, payload: AddSingleStockItemRequest): Promise<AddSingleStockItemResponse> {
-    const response = await api.post<ApiResponse<AddSingleStockItemResponse>>(API_ENDPOINTS.products.stockItem(productId), payload);
+    const response = await api.post<GenericResponse<AddSingleStockItemResponse>>(API_ENDPOINTS.products.stockItem(productId), payload);
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.error || 'Failed to add stock item');
   },
 
   async editStockItem(productId: string, payload: EditSingleStockItemRequest): Promise<EditSingleStockItemResponse> {
-    const response = await api.patch<ApiResponse<EditSingleStockItemResponse>>(API_ENDPOINTS.products.stockItem(productId), payload as any);
+    const response = await api.patch<GenericResponse<EditSingleStockItemResponse>>(API_ENDPOINTS.products.stockItem(productId), payload as any);
     if (response.data.success) {
       // Some backends return only { success: true } without data
       return response.data.data || { success: true };
@@ -999,7 +1018,7 @@ export const dashboardApi = {
   },
 
   async deleteStockItem(productId: string, payload: DeleteSingleStockItemRequest): Promise<DeleteSingleStockItemResponse> {
-    const response = await api.delete<ApiResponse<DeleteSingleStockItemResponse>>(API_ENDPOINTS.products.stockItem(productId), { data: payload });
+    const response = await api.delete<GenericResponse<DeleteSingleStockItemResponse>>(API_ENDPOINTS.products.stockItem(productId), { data: payload });
     if (response.data.success) {
       // Some backends return only { success: true } without data
       return response.data.data || { success: true };
@@ -1009,13 +1028,13 @@ export const dashboardApi = {
 
   // Receipt Management
   async getAllReceipts(): Promise<any> {
-    const response = await api.get<ApiResponse<any>>(API_ENDPOINTS.receipts.all);
+    const response = await api.get<GenericResponse<any>>(API_ENDPOINTS.receipts.all);
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.error || 'Failed to fetch receipts');
   },
 
   async getReceiptContent(reffId: string): Promise<any> {
-    const response = await api.get<ApiResponse<any>>(API_ENDPOINTS.receipts.get(reffId));
+    const response = await api.get<GenericResponse<any>>(API_ENDPOINTS.receipts.get(reffId));
     if (response.data.success && response.data.data) return response.data.data;
     throw new Error(response.data.error || 'Failed to fetch receipt content');
   },
@@ -1026,7 +1045,7 @@ export const dashboardApi = {
   },
 
   async deleteReceipt(reffId: string): Promise<any> {
-    const response = await api.delete<ApiResponse<any>>(API_ENDPOINTS.receipts.delete(reffId));
+    const response = await api.delete<GenericResponse<any>>(API_ENDPOINTS.receipts.delete(reffId));
     if (response.data.success) return response.data;
     throw new Error(response.data.error || 'Failed to delete receipt');
   },

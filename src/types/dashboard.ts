@@ -1,4 +1,4 @@
-export interface ApiResponse<T> {
+export interface DashboardOverview {
   totalPendapatan: number;
   transaksiHariIni: number;
   pendapatanHariIni: number;
@@ -708,11 +708,39 @@ export interface BulkOperationResponse {
     productId: string;
     action: string;
     success: boolean;
-    originalStockCount: number;
-    newStockCount: number;
-    addedItems?: number;
-    deletedItems?: number;
-    clearedItems?: number;
-    notes?: string;
+    data?: any;
+    error?: string;
   }>;
+}
+
+export interface GenericResponse<T> {
+  success: boolean;
+  data: T;
+  error?: string;
+  message?: string;
+}
+
+export interface SaldoHistoryEntry {
+  id: string;
+  userId: string;
+  rawUserId: string;
+  action: 'deposit' | 'manual-add' | 'manual-subtract' | string;
+  method: 'qris' | 'admin' | string;
+  amount: number;
+  before: number;
+  after: number;
+  actor: string;
+  notes: string;
+  refId: string;
+  source: 'deposit' | 'addsaldo' | 'minsado' | 'isi' | string;
+  meta: any | null;
+  timestamp: string;
+}
+
+export interface SaldoHistoryResponse {
+  userId: string;
+  total: number;
+  limit: number;
+  offset: number;
+  entries: SaldoHistoryEntry[];
 }

@@ -18,6 +18,7 @@ export const API_ENDPOINTS = {
     stats: "/api/dashboard/users/stats",
     behavior: "/api/dashboard/users/behavior",
     transactions: (userId: string) => `/api/dashboard/users/${userId}/transactions`,
+    saldoHistory: (userId: string) => `/api/dashboard/users/${userId}/saldo/history`,
   },
   transactions: {
     search: (reffId: string) => `/api/dashboard/transactions/search/${reffId}`,

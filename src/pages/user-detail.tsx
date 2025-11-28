@@ -6,11 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, CreditCard, DollarSign, User, Phone, Shield, TrendingUp, Activity, Eye, Calendar, Wallet } from 'lucide-react';
+import { ArrowLeft, CreditCard, DollarSign, User, Phone, Shield, TrendingUp, Activity, Eye, Calendar, Wallet, History } from 'lucide-react';
 import { formatCurrency, formatDate, formatTime, getTransactionUserName, getTransactionPaymentMethod, getPaymentMethodBadge, getTransactionReferenceId } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { UserSpendingChart } from '@/components/users/user-spending-chart';
 import { UserFavoriteProducts } from '@/components/users/user-favorite-products';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SaldoHistoryTable } from '@/components/users/saldo-history-table';
 
 export default function UserDetailPage() {
   const { userId } = useParams<{ userId: string }>();
@@ -337,124 +339,145 @@ export default function UserDetailPage() {
           </Card>
         </div>
 
-        {/* Transactions Table */}
+        {/* Transactions & History Tabs */}
         <div className="md:col-span-2">
-          <Card className="card-premium border-none shadow-soft h-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-primary" />
-                Recent Transactions
-              </CardTitle>
-              <CardDescription>
-                History of purchases and activities
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              {(userTransactions?.transaksi && userTransactions.transaksi.length > 0) || (currentUser?.transactionCount > 0) ? (
-                <Table>
-                  <TableHeader className="bg-muted/50">
-                    <TableRow className="hover:bg-transparent border-border/50">
-                      <TableHead>Reference ID</TableHead>
-                      <TableHead>Product</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead className="text-right">Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {userTransactions?.transaksi && userTransactions.transaksi.length > 0 ? (
-                      userTransactions.transaksi.map((transaction, index) => (
-                        <TableRow key={`real-transaction-${index}`} className="hover:bg-muted/30 border-border/50 transition-colors">
-                          <TableCell>
-                            <div className="flex flex-col gap-1">
-                              <code className="text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground border border-border w-fit">
-                                {getTransactionReferenceId(transaction)}
-                              </code>
-                              <Badge variant={getPaymentMethodBadge(getTransactionPaymentMethod(transaction))} className="w-fit text-[10px] px-1.5 py-0 h-5">
-                                {getTransactionPaymentMethod(transaction)}
-                              </Badge>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium text-foreground text-sm">{transaction.name}</p>
-                              <p className="text-xs text-muted-foreground">Qty: {transaction.jumlah}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <p className="font-medium text-foreground text-sm">{formatCurrency(transaction.totalBayar)}</p>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="text-sm text-foreground">
-                                {formatDate((() => {
-                                  const date = new Date(transaction.date);
-                                  date.setHours(date.getHours() - 7);
-                                  return date.toISOString();
-                                })(), 'short')}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {formatTime((() => {
-                                  const date = new Date(transaction.date);
-                                  date.setHours(date.getHours() - 7);
-                                  return date.toISOString();
-                                })())}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => navigate(`/transactions?search=${encodeURIComponent(getTransactionReferenceId(transaction))}`)}
-                              className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
+          <Tabs defaultValue="transactions" className="w-full">
+            <div className="flex items-center justify-between mb-4">
+              <TabsList>
+                <TabsTrigger value="transactions" className="flex items-center gap-2">
+                  <CreditCard className="h-4 w-4" />
+                  Transactions
+                </TabsTrigger>
+                <TabsTrigger value="saldo-history" className="flex items-center gap-2">
+                  <History className="h-4 w-4" />
+                  Saldo History
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="transactions" className="mt-0">
+              <Card className="card-premium border-none shadow-soft h-full">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5 text-primary" />
+                    Recent Transactions
+                  </CardTitle>
+                  <CardDescription>
+                    History of purchases and activities
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {(userTransactions?.transaksi && userTransactions.transaksi.length > 0) || (currentUser?.transactionCount > 0) ? (
+                    <Table>
+                      <TableHeader className="bg-muted/50">
+                        <TableRow className="hover:bg-transparent border-border/50">
+                          <TableHead>Reference ID</TableHead>
+                          <TableHead>Product</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead className="text-right">Action</TableHead>
                         </TableRow>
-                      ))
-                    ) : (
-                      // Enhanced data fallback
-                      Array.from({ length: Math.min(5, currentUser.transactionCount) }, (_, index) => (
-                        <TableRow key={`enhanced-transaction-${index}`} className="hover:bg-muted/30 border-border/50">
-                          <TableCell>
-                            <code className="text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground border border-border">
-                              {`REF-${currentUser.userId?.replace('@s.whatsapp.net', '')}-${String(index + 1).padStart(3, '0')}`}
-                            </code>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm text-muted-foreground italic">Archived Transaction</span>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm font-medium text-foreground">
-                              {formatCurrency(Math.floor(currentUser.totalSpent / currentUser.transactionCount))}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-xs text-muted-foreground">Unknown Date</span>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Badge variant="outline" className="text-[10px]">Archived</Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
-                    <CreditCard className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                  <p className="text-foreground font-medium">No transactions found</p>
-                  <p className="text-sm text-muted-foreground max-w-xs mx-auto mt-1">
-                    This user hasn't made any transactions yet. Once they do, they will appear here.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                      </TableHeader>
+                      <TableBody>
+                        {userTransactions?.transaksi && userTransactions.transaksi.length > 0 ? (
+                          userTransactions.transaksi.map((transaction, index) => (
+                            <TableRow key={`real-transaction-${index}`} className="hover:bg-muted/30 border-border/50 transition-colors">
+                              <TableCell>
+                                <div className="flex flex-col gap-1">
+                                  <code className="text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground border border-border w-fit">
+                                    {getTransactionReferenceId(transaction)}
+                                  </code>
+                                  <Badge variant={getPaymentMethodBadge(getTransactionPaymentMethod(transaction))} className="w-fit text-[10px] px-1.5 py-0 h-5">
+                                    {getTransactionPaymentMethod(transaction)}
+                                  </Badge>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium text-foreground text-sm">{transaction.name}</p>
+                                  <p className="text-xs text-muted-foreground">Qty: {transaction.jumlah}</p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-medium text-foreground text-sm">{formatCurrency(transaction.totalBayar)}</p>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex flex-col">
+                                  <span className="text-sm text-foreground">
+                                    {formatDate((() => {
+                                      const date = new Date(transaction.date);
+                                      date.setHours(date.getHours() - 7);
+                                      return date.toISOString();
+                                    })(), 'short')}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {formatTime((() => {
+                                      const date = new Date(transaction.date);
+                                      date.setHours(date.getHours() - 7);
+                                      return date.toISOString();
+                                    })())}
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => navigate(`/transactions?search=${encodeURIComponent(getTransactionReferenceId(transaction))}`)}
+                                  className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          // Enhanced data fallback
+                          Array.from({ length: Math.min(5, currentUser.transactionCount) }, (_, index) => (
+                            <TableRow key={`enhanced-transaction-${index}`} className="hover:bg-muted/30 border-border/50">
+                              <TableCell>
+                                <code className="text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground border border-border">
+                                  {`REF-${currentUser.userId?.replace('@s.whatsapp.net', '')}-${String(index + 1).padStart(3, '0')}`}
+                                </code>
+                              </TableCell>
+                              <TableCell>
+                                <span className="text-sm text-muted-foreground italic">Archived Transaction</span>
+                              </TableCell>
+                              <TableCell>
+                                <span className="text-sm font-medium text-foreground">
+                                  {formatCurrency(Math.floor(currentUser.totalSpent / currentUser.transactionCount))}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <span className="text-xs text-muted-foreground">Unknown Date</span>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Badge variant="outline" className="text-[10px]">Archived</Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                        <CreditCard className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                      <p className="text-foreground font-medium">No transactions found</p>
+                      <p className="text-sm text-muted-foreground max-w-xs mx-auto mt-1">
+                        This user hasn't made any transactions yet. Once they do, they will appear here.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="saldo-history" className="mt-0">
+              <SaldoHistoryTable userId={userId || ''} />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
