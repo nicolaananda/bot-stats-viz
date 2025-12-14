@@ -7,6 +7,4 @@ services:
       dockerfile: Dockerfile
     ports:
       - "7777:80"
-    volumes:
-      - ./dist:/usr/share/nginx/html
     restart: unless-stopped 
